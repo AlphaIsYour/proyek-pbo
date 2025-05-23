@@ -285,18 +285,501 @@ public class dashboard extends javax.swing.JFrame {
     }
     
     private void showKategoriPanel() {
-        // Similar implementation for Kategori management
-        // Will be implemented when needed
+        contentPanel.removeAll();
+        
+        // Create top toolbar
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton addButton = new JButton("Tambah Kategori");
+        JButton editButton = new JButton("Edit Kategori");
+        JButton deleteButton = new JButton("Hapus Kategori");
+        
+        toolbar.add(addButton);
+        toolbar.add(editButton);
+        toolbar.add(deleteButton);
+        
+        // Create table
+        String[] columns = {"ID Resep", "Nama Kategori"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        dataTable = new JTable(model);
+        scrollPane = new JScrollPane(dataTable);
+        
+        // Load data
+        loadKategoriData();
+        
+        // Add components
+        contentPanel.add(toolbar, BorderLayout.NORTH);
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add action listeners
+        addButton.addActionListener(e -> showAddKategoriDialog());
+        editButton.addActionListener(e -> showEditKategoriDialog());
+        deleteButton.addActionListener(e -> deleteKategori());
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    private void loadKategoriData() {
+        DefaultTableModel model = (DefaultTableModel) dataTable.getModel();
+        model.setRowCount(0);
+        
+        try (Connection conn = Database.koneksiDatabase();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM kategori")) {
+            
+            while (rs.next()) {
+                Object[] row = {
+                    rs.getInt("id_kategori"),
+                    rs.getString("nama_kategori")
+                };
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage());
+        }
+    }
+    
+    private void showAddKategoriDialog() {
+        JDialog dialog = new JDialog(this, "Tambah Kategori", true);
+        dialog.setLayout(new GridLayout(3, 2, 5, 5));
+        
+        JTextField idResepField = new JTextField();
+        JTextField namaKategoriField = new JTextField();
+        
+        dialog.add(new JLabel("ID Kategori:"));
+        dialog.add(idResepField);
+        dialog.add(new JLabel("Nama Kategori:"));
+        dialog.add(namaKategoriField);
+        
+        JButton saveButton = new JButton("Simpan");
+        saveButton.addActionListener(e -> {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "INSERT INTO kategori (id_kategori, nama_kategori) VALUES (?, ?)")) {
+                
+                pstmt.setInt(1, Integer.parseInt(idResepField.getText()));
+                pstmt.setString(2, namaKategoriField.getText());
+                pstmt.executeUpdate();
+                
+                loadKategoriData();
+                dialog.dispose();
+            } catch (SQLException | NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error saving data: " + ex.getMessage());
+            }
+        });
+        
+        dialog.add(saveButton);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void showEditKategoriDialog() {
+        int selectedRow = dataTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih kategori yang akan diedit");
+            return;
+        }
+        
+        JDialog dialog = new JDialog(this, "Edit Kategori", true);
+        dialog.setLayout(new GridLayout(3, 2, 5, 5));
+        
+        JTextField idResepField = new JTextField(dataTable.getValueAt(selectedRow, 0).toString());
+        JTextField namaKategoriField = new JTextField(dataTable.getValueAt(selectedRow, 1).toString());
+        
+        dialog.add(new JLabel("ID kategori:"));
+        dialog.add(idResepField);
+        dialog.add(new JLabel("Nama Kategori:"));
+        dialog.add(namaKategoriField);
+        
+        JButton updateButton = new JButton("Update");
+        updateButton.addActionListener(e -> {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "UPDATE kategori SET nama_kategori=? WHERE id_kategori=?")) {
+                
+                pstmt.setString(1, namaKategoriField.getText());
+                pstmt.setInt(2, Integer.parseInt(idResepField.getText()));
+                pstmt.executeUpdate();
+                
+                loadKategoriData();
+                dialog.dispose();
+            } catch (SQLException | NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error updating data: " + ex.getMessage());
+            }
+        });
+        
+        dialog.add(updateButton);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void deleteKategori() {
+        int selectedRow = dataTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih kategori yang akan dihapus");
+            return;
+        }
+        
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Apakah Anda yakin ingin menghapus kategori ini?", 
+            "Konfirmasi Hapus", 
+            JOptionPane.YES_NO_OPTION);
+            
+        if (confirm == JOptionPane.YES_OPTION) {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "DELETE FROM kategori WHERE id_kategori=?")) {
+                
+                pstmt.setInt(1, (Integer)dataTable.getValueAt(selectedRow, 0));
+                pstmt.executeUpdate();
+                
+                loadKategoriData();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Error deleting data: " + ex.getMessage());
+            }
+        }
     }
     
     private void showUsersPanel() {
-        // Similar implementation for Users management
-        // Will be implemented when needed
+        contentPanel.removeAll();
+        
+        // Create top toolbar
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton addButton = new JButton("Tambah User");
+        JButton editButton = new JButton("Edit User");
+        JButton deleteButton = new JButton("Hapus User");
+        
+        toolbar.add(addButton);
+        toolbar.add(editButton);
+        toolbar.add(deleteButton);
+        
+        // Create table
+        String[] columns = {"ID", "Nama", "Username", "Email", "Password"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        dataTable = new JTable(model);
+        scrollPane = new JScrollPane(dataTable);
+        
+        // Load data
+        loadUsersData();
+        
+        // Add components
+        contentPanel.add(toolbar, BorderLayout.NORTH);
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add action listeners
+        addButton.addActionListener(e -> showAddUserDialog());
+        editButton.addActionListener(e -> showEditUserDialog());
+        deleteButton.addActionListener(e -> deleteUser());
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    private void loadUsersData() {
+        DefaultTableModel model = (DefaultTableModel) dataTable.getModel();
+        model.setRowCount(0);
+        
+        try (Connection conn = Database.koneksiDatabase();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM user")) {
+            
+            while (rs.next()) {
+                Object[] row = {
+                    rs.getInt("id_user"),
+                    rs.getString("nama"),
+                    rs.getString("username"),
+                    rs.getString("email"),
+                    rs.getString("password")
+                };
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage());
+        }
+    }
+    
+    private void showAddUserDialog() {
+        JDialog dialog = new JDialog(this, "Tambah User", true);
+        dialog.setLayout(new GridLayout(6, 2, 5, 5));
+        
+        JTextField namaField = new JTextField();
+        JTextField usernameField = new JTextField();
+        JTextField emailField = new JTextField();
+        JPasswordField passwordField = new JPasswordField();
+        
+        dialog.add(new JLabel("Nama:"));
+        dialog.add(namaField);
+        dialog.add(new JLabel("Username:"));
+        dialog.add(usernameField);
+        dialog.add(new JLabel("Email:"));
+        dialog.add(emailField);
+        dialog.add(new JLabel("Password:"));
+        dialog.add(passwordField);
+        
+        JButton saveButton = new JButton("Simpan");
+        saveButton.addActionListener(e -> {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "INSERT INTO user (nama, username, email, password) VALUES (?, ?, ?, ?)")) {
+                
+                pstmt.setString(1, namaField.getText());
+                pstmt.setString(2, usernameField.getText());
+                pstmt.setString(3, emailField.getText());
+                pstmt.setString(4, new String(passwordField.getPassword()));
+                pstmt.executeUpdate();
+                
+                loadUsersData();
+                dialog.dispose();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error saving data: " + ex.getMessage());
+            }
+        });
+        
+        dialog.add(saveButton);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void showEditUserDialog() {
+        int selectedRow = dataTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih user yang akan diedit");
+            return;
+        }
+        
+        JDialog dialog = new JDialog(this, "Edit User", true);
+        dialog.setLayout(new GridLayout(6, 2, 5, 5));
+        
+        JTextField namaField = new JTextField(dataTable.getValueAt(selectedRow, 1).toString());
+        JTextField usernameField = new JTextField(dataTable.getValueAt(selectedRow, 2).toString());
+        JTextField emailField = new JTextField(dataTable.getValueAt(selectedRow, 3).toString());
+        JPasswordField passwordField = new JPasswordField(dataTable.getValueAt(selectedRow, 4).toString());
+        
+        dialog.add(new JLabel("Nama:"));
+        dialog.add(namaField);
+        dialog.add(new JLabel("Username:"));
+        dialog.add(usernameField);
+        dialog.add(new JLabel("Email:"));
+        dialog.add(emailField);
+        dialog.add(new JLabel("Password:"));
+        dialog.add(passwordField);
+        
+        JButton updateButton = new JButton("Update");
+        updateButton.addActionListener(e -> {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "UPDATE user SET nama=?, username=?, email=?, password=? WHERE id_user=?")) {
+                
+                pstmt.setString(1, namaField.getText());
+                pstmt.setString(2, usernameField.getText());
+                pstmt.setString(3, emailField.getText());
+                pstmt.setString(4, new String(passwordField.getPassword()));
+                pstmt.setInt(5, (Integer)dataTable.getValueAt(selectedRow, 0));
+                pstmt.executeUpdate();
+                
+                loadUsersData();
+                dialog.dispose();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error updating data: " + ex.getMessage());
+            }
+        });
+        
+        dialog.add(updateButton);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void deleteUser() {
+        int selectedRow = dataTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih user yang akan dihapus");
+            return;
+        }
+        
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Apakah Anda yakin ingin menghapus user ini?", 
+            "Konfirmasi Hapus", 
+            JOptionPane.YES_NO_OPTION);
+            
+        if (confirm == JOptionPane.YES_OPTION) {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "DELETE FROM user WHERE id_user=?")) {
+                
+                pstmt.setInt(1, (Integer)dataTable.getValueAt(selectedRow, 0));
+                pstmt.executeUpdate();
+                
+                loadUsersData();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Error deleting data: " + ex.getMessage());
+            }
+        }
     }
     
     private void showKomentarPanel() {
-        // Similar implementation for Komentar management
-        // Will be implemented when needed
+        contentPanel.removeAll();
+        
+        // Create top toolbar
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton addButton = new JButton("Tambah Komentar");
+        JButton editButton = new JButton("Edit Komentar");
+        JButton deleteButton = new JButton("Hapus Komentar");
+        
+        toolbar.add(addButton);
+        toolbar.add(editButton);
+        toolbar.add(deleteButton);
+        
+        // Create table
+        String[] columns = {"ID Komentar", "ID User", "Isi Komentar"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        dataTable = new JTable(model);
+        scrollPane = new JScrollPane(dataTable);
+        
+        // Load data
+        loadKomentarData();
+        
+        // Add components
+        contentPanel.add(toolbar, BorderLayout.NORTH);
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add action listeners
+        addButton.addActionListener(e -> showAddKomentarDialog());
+        editButton.addActionListener(e -> showEditKomentarDialog());
+        deleteButton.addActionListener(e -> deleteKomentar());
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    private void loadKomentarData() {
+        DefaultTableModel model = (DefaultTableModel) dataTable.getModel();
+        model.setRowCount(0);
+        
+        try (Connection conn = Database.koneksiDatabase();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM komentar")) {
+            
+            while (rs.next()) {
+                Object[] row = {
+                    rs.getInt("id_komentar"),
+                    rs.getInt("id_user"),
+                    rs.getString("isi_komentar")
+                };
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage());
+        }
+    }
+    
+    private void showAddKomentarDialog() {
+        JDialog dialog = new JDialog(this, "Tambah Komentar", true);
+        dialog.setLayout(new GridLayout(4, 2, 5, 5));
+        
+        JTextField idUserField = new JTextField();
+        JTextArea isiKomentarArea = new JTextArea(5, 20);
+        JScrollPane scrollPane = new JScrollPane(isiKomentarArea);
+        
+        dialog.add(new JLabel("ID User:"));
+        dialog.add(idUserField);
+        dialog.add(new JLabel("Isi Komentar:"));
+        dialog.add(scrollPane);
+        
+        JButton saveButton = new JButton("Simpan");
+        saveButton.addActionListener(e -> {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "INSERT INTO komentar (id_user, isi_komentar) VALUES (?, ?)")) {
+                
+                pstmt.setInt(1, Integer.parseInt(idUserField.getText()));
+                pstmt.setString(2, isiKomentarArea.getText());
+                pstmt.executeUpdate();
+                
+                loadKomentarData();
+                dialog.dispose();
+            } catch (SQLException | NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error saving data: " + ex.getMessage());
+            }
+        });
+        
+        dialog.add(saveButton);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void showEditKomentarDialog() {
+        int selectedRow = dataTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih komentar yang akan diedit");
+            return;
+        }
+        
+        JDialog dialog = new JDialog(this, "Edit Komentar", true);
+        dialog.setLayout(new GridLayout(4, 2, 5, 5));
+        
+        JTextField idUserField = new JTextField(dataTable.getValueAt(selectedRow, 1).toString());
+        JTextArea isiKomentarArea = new JTextArea(dataTable.getValueAt(selectedRow, 2).toString(), 5, 20);
+        JScrollPane scrollPane = new JScrollPane(isiKomentarArea);
+        
+        dialog.add(new JLabel("ID User:"));
+        dialog.add(idUserField);
+        dialog.add(new JLabel("Isi Komentar:"));
+        dialog.add(scrollPane);
+        
+        JButton updateButton = new JButton("Update");
+        updateButton.addActionListener(e -> {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "UPDATE komentar SET id_user=?, isi_komentar=? WHERE id_komentar=?")) {
+                
+                pstmt.setInt(1, Integer.parseInt(idUserField.getText()));
+                pstmt.setString(2, isiKomentarArea.getText());
+                pstmt.setInt(3, (Integer)dataTable.getValueAt(selectedRow, 0));
+                pstmt.executeUpdate();
+                
+                loadKomentarData();
+                dialog.dispose();
+            } catch (SQLException | NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error updating data: " + ex.getMessage());
+            }
+        });
+        
+        dialog.add(updateButton);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
+    private void deleteKomentar() {
+        int selectedRow = dataTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih komentar yang akan dihapus");
+            return;
+        }
+        
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Apakah Anda yakin ingin menghapus komentar ini?", 
+            "Konfirmasi Hapus", 
+            JOptionPane.YES_NO_OPTION);
+            
+        if (confirm == JOptionPane.YES_OPTION) {
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "DELETE FROM komentar WHERE id_komentar=?")) {
+                
+                pstmt.setInt(1, (Integer)dataTable.getValueAt(selectedRow, 0));
+                pstmt.executeUpdate();
+                
+                loadKomentarData();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Error deleting data: " + ex.getMessage());
+            }
+        }
     }
 
     /**
