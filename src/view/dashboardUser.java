@@ -9,7 +9,6 @@ package view;
  * @author LENOVO
  */
 public class dashboardUser extends javax.swing.JFrame {
-
     /**
      * Creates new form dashboard
      */
