@@ -4,11 +4,11 @@
  */
 package view;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.table.DefaultTableModel;
 import java.sql.*;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import model.Database;
 
 /**
@@ -1120,34 +1120,34 @@ public class dashboard extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    UIManager.setLookAndFeel(info.getClassName());
+                    
+                    // Customize Nimbus colors to match our theme
+                    UIManager.put("nimbusBase", new Color(0, 41, 107)); // #00296b
+                    UIManager.put("nimbusBlueGrey", new Color(0, 63, 136)); // #003f88
+                    UIManager.put("control", new Color(0, 80, 157)); // #00509d
+                    
+                    // Set default button colors
+                    UIManager.put("Button.background", new Color(253, 197, 0)); // #fdc500
+                    UIManager.put("Button.foreground", new Color(0, 41, 107)); // #00296b
+                    
+                    // Set table header colors
+                    UIManager.put("TableHeader.background", new Color(0, 41, 107)); // #00296b
+                    UIManager.put("TableHeader.foreground", Color.WHITE);
+                    
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(dashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(dashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(dashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(dashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new dashboard().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new dashboard().setVisible(true);
         });
     }
 

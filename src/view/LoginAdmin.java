@@ -279,7 +279,26 @@ public class LoginAdmin extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    
+                    // Customize Nimbus colors to match our theme
+                    UIManager.put("nimbusBase", new Color(0, 41, 107)); // #00296b
+                    UIManager.put("nimbusBlueGrey", new Color(0, 63, 136)); // #003f88
+                    UIManager.put("control", new Color(0, 80, 157)); // #00509d
+                    
+                    // Set default button colors
+                    UIManager.put("Button.background", new Color(253, 197, 0)); // #fdc500
+                    UIManager.put("Button.foreground", new Color(0, 41, 107)); // #00296b
+                    
+                    // Set table header colors
+                    UIManager.put("TableHeader.background", new Color(0, 41, 107)); // #00296b
+                    UIManager.put("TableHeader.foreground", Color.WHITE);
+                    
+                    break;
+                }
+            }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(LoginAdmin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
