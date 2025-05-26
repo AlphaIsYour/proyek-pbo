@@ -529,14 +529,18 @@ public class dashboard extends javax.swing.JFrame {
     }
     
     private void showAddKategoriDialog() {
-        JDialog dialog = createStyledDialog("Tambah Kategori");
-        dialog.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        
-        JTextField idResepField = createDialogTextField();
-        JTextField namaKategoriField = createDialogTextField();
+    JDialog dialog = createStyledDialog("Tambah Kategori");
+    dialog.setLayout(new GridBagLayout());
+    dialog.setPreferredSize(new Dimension(500, 200));
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.insets = new Insets(5, 5, 5, 5);
+    gbc.weightx = 1.0; // Make the text fields take up extra horizontal space
+    
+    JTextField idResepField = createDialogTextField();
+    idResepField.setPreferredSize(new Dimension(400, 30));
+    JTextField namaKategoriField = createDialogTextField();
+    namaKategoriField.setPreferredSize(new Dimension(400, 30));
         
         gbc.gridx = 0; gbc.gridy = 0;
         dialog.add(createDialogLabel("ID Kategori:"), gbc);
@@ -584,9 +588,11 @@ public class dashboard extends javax.swing.JFrame {
         
         JDialog dialog = createStyledDialog("Edit Kategori");
         dialog.setLayout(new GridBagLayout());
+        dialog.setPreferredSize(new Dimension(500, 200));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.weightx = 1.0; // Make the text fields take up extra horizontal space
         
         JTextField idResepField = createDialogTextField();
         idResepField.setText(dataTable.getValueAt(selectedRow, 0).toString());
@@ -733,15 +739,19 @@ public class dashboard extends javax.swing.JFrame {
     }
     
     private void showAddUserDialog() {
-        JDialog dialog = createStyledDialog("Tambah User");
-        dialog.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        
-        JTextField namaField = createDialogTextField();
-        JTextField usernameField = createDialogTextField();
-        JTextField emailField = createDialogTextField();
+    JDialog dialog = createStyledDialog("Tambah User");
+    dialog.setLayout(new GridBagLayout());
+    dialog.setPreferredSize(new Dimension(450, 300));
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.insets = new Insets(5, 5, 5, 5);
+    
+    JTextField namaField = createDialogTextField();
+    namaField.setPreferredSize(new Dimension(300, 30));
+    JTextField usernameField = createDialogTextField();
+    usernameField.setPreferredSize(new Dimension(300, 30));
+    JTextField emailField = createDialogTextField();
+    emailField.setPreferredSize(new Dimension(300, 30));
         JPasswordField passwordField = new JPasswordField();
         passwordField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(0, 63, 136)), // #003f88
