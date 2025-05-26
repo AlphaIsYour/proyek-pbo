@@ -51,37 +51,43 @@ public class dashboard extends javax.swing.JFrame {
         Container container = getContentPane();
         container.setLayout(new BorderLayout());
         
-        // Create top navbar
+        // Create top navbar with new color scheme
         JPanel navbarPanel = new JPanel();
-        navbarPanel.setBackground(new Color(51, 51, 51));
+        navbarPanel.setBackground(new Color(0, 41, 107)); // #00296b
         navbarPanel.setPreferredSize(new Dimension(getWidth(), 60));
         navbarPanel.setLayout(new BorderLayout());
         
-        // Add brand name to navbar
+        // Add brand name to navbar with updated styling
         JLabel brandLabel = new JLabel("Wellessplate");
         brandLabel.setForeground(Color.WHITE);
-        brandLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        brandLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         brandLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
         navbarPanel.add(brandLabel, BorderLayout.WEST);
         
-        // Add back to index button
+        // Add back to index button with new styling
         JButton backButton = new JButton("Back to Index");
+        backButton.setBackground(new Color(253, 197, 0)); // #fdc500
+        backButton.setForeground(new Color(0, 41, 107)); // #00296b
+        backButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        backButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
         backButton.setFocusPainted(false);
+        backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        backButton.setMargin(new Insets(5, 10, 5, 10));
         navbarPanel.add(backButton, BorderLayout.EAST);
         
-        // Create sidebar
+        // Create sidebar with updated styling
         sidebarPanel = new JPanel();
         sidebarPanel.setPreferredSize(new Dimension(200, getHeight()));
-        sidebarPanel.setBackground(new Color(242, 242, 242));
+        sidebarPanel.setBackground(new Color(0, 63, 136)); // #003f88
         sidebarPanel.setLayout(new BoxLayout(sidebarPanel, BoxLayout.Y_AXIS));
         
-        // Add menu items to sidebar
+        // Add menu items to sidebar with new styling
         addSidebarButton("Resep", e -> showResepPanel());
         addSidebarButton("Kategori", e -> showKategoriPanel());
         addSidebarButton("Users", e -> showUsersPanel());
         addSidebarButton("Komentar", e -> showKomentarPanel());
         
-        // Create content panel
+        // Create content panel with light background
         contentPanel = new JPanel();
         contentPanel.setLayout(new BorderLayout());
         contentPanel.setBackground(Color.WHITE);
@@ -97,40 +103,101 @@ public class dashboard extends javax.swing.JFrame {
     
     private void addSidebarButton(String text, ActionListener listener) {
         JButton button = new JButton(text);
-        button.setMaximumSize(new Dimension(200, 40));
-        button.setPreferredSize(new Dimension(200, 40));
-        button.setBackground(new Color(242, 242, 242));
+        button.setMaximumSize(new Dimension(200, 45));
+        button.setPreferredSize(new Dimension(200, 45));
+        button.setBackground(new Color(0, 63, 136)); // #003f88
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setBorderPainted(false);
         button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.addActionListener(listener);
+        
+        // Add hover effect
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(new Color(0, 80, 157)); // #00509d
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(new Color(0, 63, 136)); // #003f88
+            }
+        });
+        
         sidebarPanel.add(button);
+        sidebarPanel.add(Box.createRigidArea(new Dimension(0, 1))); // Add small gap between buttons
+    }
+    
+    private JButton createActionButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(new Color(0, 41, 107)); // #00296b
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setMargin(new Insets(8, 15, 8, 15));
+        
+        // Add hover effect
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(new Color(0, 80, 157)); // #00509d
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(new Color(0, 41, 107)); // #00296b
+            }
+        });
+        
+        return button;
     }
     
     private void showResepPanel() {
         contentPanel.removeAll();
         
-        // Create top toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton addButton = new JButton("Tambah Resep");
-        JButton editButton = new JButton("Edit Resep");
-        JButton deleteButton = new JButton("Hapus Resep");
+        // Create top toolbar with updated styling
+        JPanel toolbar = new JPanel();
+        toolbar.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        toolbar.setBackground(Color.WHITE);
+        toolbar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JButton addButton = createActionButton("Tambah Resep");
+        JButton editButton = createActionButton("Edit Resep");
+        JButton deleteButton = createActionButton("Hapus Resep");
         
         toolbar.add(addButton);
         toolbar.add(editButton);
         toolbar.add(deleteButton);
         
-        // Create table
+        // Create table with updated styling
         String[] columns = {"ID", "Judul", "Bahan", "Alat", "Langkah"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         dataTable = new JTable(model);
+        dataTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dataTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        dataTable.getTableHeader().setBackground(new Color(0, 41, 107)); // #00296b
+        dataTable.getTableHeader().setForeground(Color.WHITE);
+        dataTable.setRowHeight(25);
+        dataTable.setGridColor(new Color(230, 230, 230));
+        
         scrollPane = new JScrollPane(dataTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         
         // Load data
         loadResepData();
         
-        // Add components
-        contentPanel.add(toolbar, BorderLayout.NORTH);
-        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        // Add components with padding
+        JPanel contentWrapper = new JPanel(new BorderLayout());
+        contentWrapper.setBackground(Color.WHITE);
+        contentWrapper.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
+        contentWrapper.add(toolbar, BorderLayout.NORTH);
+        contentWrapper.add(scrollPane, BorderLayout.CENTER);
+        
+        contentPanel.add(contentWrapper);
         
         // Add action listeners
         addButton.addActionListener(e -> showAddResepDialog());
@@ -164,25 +231,107 @@ public class dashboard extends javax.swing.JFrame {
         }
     }
     
+    private JDialog createStyledDialog(String title) {
+        JDialog dialog = new JDialog(this, title, true);
+        dialog.setBackground(Color.WHITE);
+        dialog.getRootPane().setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        return dialog;
+    }
+
+    private JButton createDialogButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(new Color(253, 197, 0)); // #fdc500
+        button.setForeground(new Color(0, 41, 107)); // #00296b
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setMargin(new Insets(8, 15, 8, 15));
+        
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(new Color(255, 213, 0)); // #ffd500
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(new Color(253, 197, 0)); // #fdc500
+            }
+        });
+        
+        return button;
+    }
+
+    private JLabel createDialogLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setForeground(new Color(0, 41, 107)); // #00296b
+        return label;
+    }
+
+    private JTextField createDialogTextField() {
+        JTextField field = new JTextField();
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0, 63, 136)), // #003f88
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+        return field;
+    }
+
+    private JTextArea createDialogTextArea() {
+        JTextArea area = new JTextArea();
+        area.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        area.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0, 63, 136)), // #003f88
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+        return area;
+    }
+
     private void showAddResepDialog() {
-        JDialog dialog = new JDialog(this, "Tambah Resep", true);
-        dialog.setLayout(new GridLayout(6, 2, 5, 5));
+        JDialog dialog = createStyledDialog("Tambah Resep");
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        JTextField judulField = new JTextField();
-        JTextField bahanField = new JTextField();
-        JTextField alatField = new JTextField();
-        JTextArea langkahArea = new JTextArea();
+        JTextField judulField = createDialogTextField();
+        JTextField bahanField = createDialogTextField();
+        JTextField alatField = createDialogTextField();
+        JTextArea langkahArea = createDialogTextArea();
+        JScrollPane scrollPane = new JScrollPane(langkahArea);
+        scrollPane.setPreferredSize(new Dimension(300, 100));
         
-        dialog.add(new JLabel("Judul:"));
-        dialog.add(judulField);
-        dialog.add(new JLabel("Bahan:"));
-        dialog.add(bahanField);
-        dialog.add(new JLabel("Alat:"));
-        dialog.add(alatField);
-        dialog.add(new JLabel("Langkah:"));
-        dialog.add(new JScrollPane(langkahArea));
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(createDialogLabel("Judul:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(judulField, gbc);
         
-        JButton saveButton = new JButton("Simpan");
+        gbc.gridx = 0; gbc.gridy = 1;
+        dialog.add(createDialogLabel("Bahan:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(bahanField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 2;
+        dialog.add(createDialogLabel("Alat:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(alatField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 3;
+        dialog.add(createDialogLabel("Langkah:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(scrollPane, gbc);
+        
+        JButton saveButton = createDialogButton("Simpan");
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(saveButton, gbc);
+        
         saveButton.addActionListener(e -> {
             try (Connection conn = Database.koneksiDatabase();
                  PreparedStatement pstmt = conn.prepareStatement(
@@ -201,7 +350,6 @@ public class dashboard extends javax.swing.JFrame {
             }
         });
         
-        dialog.add(saveButton);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
@@ -214,24 +362,49 @@ public class dashboard extends javax.swing.JFrame {
             return;
         }
         
-        JDialog dialog = new JDialog(this, "Edit Resep", true);
-        dialog.setLayout(new GridLayout(6, 2, 5, 5));
+        JDialog dialog = createStyledDialog("Edit Resep");
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        JTextField judulField = new JTextField(dataTable.getValueAt(selectedRow, 1).toString());
-        JTextField bahanField = new JTextField(dataTable.getValueAt(selectedRow, 2).toString());
-        JTextField alatField = new JTextField(dataTable.getValueAt(selectedRow, 3).toString());
-        JTextArea langkahArea = new JTextArea(dataTable.getValueAt(selectedRow, 4).toString());
+        JTextField judulField = createDialogTextField();
+        judulField.setText(dataTable.getValueAt(selectedRow, 1).toString());
+        JTextField bahanField = createDialogTextField();
+        bahanField.setText(dataTable.getValueAt(selectedRow, 2).toString());
+        JTextField alatField = createDialogTextField();
+        alatField.setText(dataTable.getValueAt(selectedRow, 3).toString());
+        JTextArea langkahArea = createDialogTextArea();
+        langkahArea.setText(dataTable.getValueAt(selectedRow, 4).toString());
+        JScrollPane scrollPane = new JScrollPane(langkahArea);
+        scrollPane.setPreferredSize(new Dimension(300, 100));
         
-        dialog.add(new JLabel("Judul:"));
-        dialog.add(judulField);
-        dialog.add(new JLabel("Bahan:"));
-        dialog.add(bahanField);
-        dialog.add(new JLabel("Alat:"));
-        dialog.add(alatField);
-        dialog.add(new JLabel("Langkah:"));
-        dialog.add(new JScrollPane(langkahArea));
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(createDialogLabel("Judul:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(judulField, gbc);
         
-        JButton updateButton = new JButton("Update");
+        gbc.gridx = 0; gbc.gridy = 1;
+        dialog.add(createDialogLabel("Bahan:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(bahanField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 2;
+        dialog.add(createDialogLabel("Alat:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(alatField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 3;
+        dialog.add(createDialogLabel("Langkah:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(scrollPane, gbc);
+        
+        JButton updateButton = createDialogButton("Update");
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(updateButton, gbc);
+        
         updateButton.addActionListener(e -> {
             try (Connection conn = Database.koneksiDatabase();
                  PreparedStatement pstmt = conn.prepareStatement(
@@ -251,7 +424,6 @@ public class dashboard extends javax.swing.JFrame {
             }
         });
         
-        dialog.add(updateButton);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
@@ -287,28 +459,45 @@ public class dashboard extends javax.swing.JFrame {
     private void showKategoriPanel() {
         contentPanel.removeAll();
         
-        // Create top toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton addButton = new JButton("Tambah Kategori");
-        JButton editButton = new JButton("Edit Kategori");
-        JButton deleteButton = new JButton("Hapus Kategori");
+        // Create top toolbar with updated styling
+        JPanel toolbar = new JPanel();
+        toolbar.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        toolbar.setBackground(Color.WHITE);
+        toolbar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JButton addButton = createActionButton("Tambah Kategori");
+        JButton editButton = createActionButton("Edit Kategori");
+        JButton deleteButton = createActionButton("Hapus Kategori");
         
         toolbar.add(addButton);
         toolbar.add(editButton);
         toolbar.add(deleteButton);
         
-        // Create table
+        // Create table with updated styling
         String[] columns = {"ID Resep", "Nama Kategori"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         dataTable = new JTable(model);
+        dataTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dataTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        dataTable.getTableHeader().setBackground(new Color(0, 41, 107)); // #00296b
+        dataTable.getTableHeader().setForeground(Color.WHITE);
+        dataTable.setRowHeight(25);
+        dataTable.setGridColor(new Color(230, 230, 230));
+        
         scrollPane = new JScrollPane(dataTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         
         // Load data
         loadKategoriData();
         
-        // Add components
-        contentPanel.add(toolbar, BorderLayout.NORTH);
-        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        // Add components with padding
+        JPanel contentWrapper = new JPanel(new BorderLayout());
+        contentWrapper.setBackground(Color.WHITE);
+        contentWrapper.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
+        contentWrapper.add(toolbar, BorderLayout.NORTH);
+        contentWrapper.add(scrollPane, BorderLayout.CENTER);
+        
+        contentPanel.add(contentWrapper);
         
         // Add action listeners
         addButton.addActionListener(e -> showAddKategoriDialog());
@@ -340,18 +529,31 @@ public class dashboard extends javax.swing.JFrame {
     }
     
     private void showAddKategoriDialog() {
-        JDialog dialog = new JDialog(this, "Tambah Kategori", true);
-        dialog.setLayout(new GridLayout(3, 2, 5, 5));
+        JDialog dialog = createStyledDialog("Tambah Kategori");
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        JTextField idResepField = new JTextField();
-        JTextField namaKategoriField = new JTextField();
+        JTextField idResepField = createDialogTextField();
+        JTextField namaKategoriField = createDialogTextField();
         
-        dialog.add(new JLabel("ID Kategori:"));
-        dialog.add(idResepField);
-        dialog.add(new JLabel("Nama Kategori:"));
-        dialog.add(namaKategoriField);
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(createDialogLabel("ID Kategori:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(idResepField, gbc);
         
-        JButton saveButton = new JButton("Simpan");
+        gbc.gridx = 0; gbc.gridy = 1;
+        dialog.add(createDialogLabel("Nama Kategori:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(namaKategoriField, gbc);
+        
+        JButton saveButton = createDialogButton("Simpan");
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(saveButton, gbc);
+        
         saveButton.addActionListener(e -> {
             try (Connection conn = Database.koneksiDatabase();
                  PreparedStatement pstmt = conn.prepareStatement(
@@ -368,7 +570,6 @@ public class dashboard extends javax.swing.JFrame {
             }
         });
         
-        dialog.add(saveButton);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
@@ -381,18 +582,33 @@ public class dashboard extends javax.swing.JFrame {
             return;
         }
         
-        JDialog dialog = new JDialog(this, "Edit Kategori", true);
-        dialog.setLayout(new GridLayout(3, 2, 5, 5));
+        JDialog dialog = createStyledDialog("Edit Kategori");
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        JTextField idResepField = new JTextField(dataTable.getValueAt(selectedRow, 0).toString());
-        JTextField namaKategoriField = new JTextField(dataTable.getValueAt(selectedRow, 1).toString());
+        JTextField idResepField = createDialogTextField();
+        idResepField.setText(dataTable.getValueAt(selectedRow, 0).toString());
+        JTextField namaKategoriField = createDialogTextField();
+        namaKategoriField.setText(dataTable.getValueAt(selectedRow, 1).toString());
         
-        dialog.add(new JLabel("ID kategori:"));
-        dialog.add(idResepField);
-        dialog.add(new JLabel("Nama Kategori:"));
-        dialog.add(namaKategoriField);
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(createDialogLabel("ID Kategori:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(idResepField, gbc);
         
-        JButton updateButton = new JButton("Update");
+        gbc.gridx = 0; gbc.gridy = 1;
+        dialog.add(createDialogLabel("Nama Kategori:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(namaKategoriField, gbc);
+        
+        JButton updateButton = createDialogButton("Update");
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(updateButton, gbc);
+        
         updateButton.addActionListener(e -> {
             try (Connection conn = Database.koneksiDatabase();
                  PreparedStatement pstmt = conn.prepareStatement(
@@ -409,7 +625,6 @@ public class dashboard extends javax.swing.JFrame {
             }
         });
         
-        dialog.add(updateButton);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
@@ -445,28 +660,45 @@ public class dashboard extends javax.swing.JFrame {
     private void showUsersPanel() {
         contentPanel.removeAll();
         
-        // Create top toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton addButton = new JButton("Tambah User");
-        JButton editButton = new JButton("Edit User");
-        JButton deleteButton = new JButton("Hapus User");
+        // Create top toolbar with updated styling
+        JPanel toolbar = new JPanel();
+        toolbar.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        toolbar.setBackground(Color.WHITE);
+        toolbar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JButton addButton = createActionButton("Tambah User");
+        JButton editButton = createActionButton("Edit User");
+        JButton deleteButton = createActionButton("Hapus User");
         
         toolbar.add(addButton);
         toolbar.add(editButton);
         toolbar.add(deleteButton);
         
-        // Create table
+        // Create table with updated styling
         String[] columns = {"ID", "Nama", "Username", "Email", "Password"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         dataTable = new JTable(model);
+        dataTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dataTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        dataTable.getTableHeader().setBackground(new Color(0, 41, 107)); // #00296b
+        dataTable.getTableHeader().setForeground(Color.WHITE);
+        dataTable.setRowHeight(25);
+        dataTable.setGridColor(new Color(230, 230, 230));
+        
         scrollPane = new JScrollPane(dataTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         
         // Load data
         loadUsersData();
         
-        // Add components
-        contentPanel.add(toolbar, BorderLayout.NORTH);
-        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        // Add components with padding
+        JPanel contentWrapper = new JPanel(new BorderLayout());
+        contentWrapper.setBackground(Color.WHITE);
+        contentWrapper.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
+        contentWrapper.add(toolbar, BorderLayout.NORTH);
+        contentWrapper.add(scrollPane, BorderLayout.CENTER);
+        
+        contentPanel.add(contentWrapper);
         
         // Add action listeners
         addButton.addActionListener(e -> showAddUserDialog());
@@ -501,24 +733,47 @@ public class dashboard extends javax.swing.JFrame {
     }
     
     private void showAddUserDialog() {
-        JDialog dialog = new JDialog(this, "Tambah User", true);
-        dialog.setLayout(new GridLayout(6, 2, 5, 5));
+        JDialog dialog = createStyledDialog("Tambah User");
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        JTextField namaField = new JTextField();
-        JTextField usernameField = new JTextField();
-        JTextField emailField = new JTextField();
+        JTextField namaField = createDialogTextField();
+        JTextField usernameField = createDialogTextField();
+        JTextField emailField = createDialogTextField();
         JPasswordField passwordField = new JPasswordField();
+        passwordField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0, 63, 136)), // #003f88
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
         
-        dialog.add(new JLabel("Nama:"));
-        dialog.add(namaField);
-        dialog.add(new JLabel("Username:"));
-        dialog.add(usernameField);
-        dialog.add(new JLabel("Email:"));
-        dialog.add(emailField);
-        dialog.add(new JLabel("Password:"));
-        dialog.add(passwordField);
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(createDialogLabel("Nama:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(namaField, gbc);
         
-        JButton saveButton = new JButton("Simpan");
+        gbc.gridx = 0; gbc.gridy = 1;
+        dialog.add(createDialogLabel("Username:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(usernameField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 2;
+        dialog.add(createDialogLabel("Email:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(emailField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 3;
+        dialog.add(createDialogLabel("Password:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(passwordField, gbc);
+        
+        JButton saveButton = createDialogButton("Simpan");
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(saveButton, gbc);
+        
         saveButton.addActionListener(e -> {
             try (Connection conn = Database.koneksiDatabase();
                  PreparedStatement pstmt = conn.prepareStatement(
@@ -537,7 +792,6 @@ public class dashboard extends javax.swing.JFrame {
             }
         });
         
-        dialog.add(saveButton);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
@@ -550,24 +804,50 @@ public class dashboard extends javax.swing.JFrame {
             return;
         }
         
-        JDialog dialog = new JDialog(this, "Edit User", true);
-        dialog.setLayout(new GridLayout(6, 2, 5, 5));
+        JDialog dialog = createStyledDialog("Edit User");
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        JTextField namaField = new JTextField(dataTable.getValueAt(selectedRow, 1).toString());
-        JTextField usernameField = new JTextField(dataTable.getValueAt(selectedRow, 2).toString());
-        JTextField emailField = new JTextField(dataTable.getValueAt(selectedRow, 3).toString());
+        JTextField namaField = createDialogTextField();
+        namaField.setText(dataTable.getValueAt(selectedRow, 1).toString());
+        JTextField usernameField = createDialogTextField();
+        usernameField.setText(dataTable.getValueAt(selectedRow, 2).toString());
+        JTextField emailField = createDialogTextField();
+        emailField.setText(dataTable.getValueAt(selectedRow, 3).toString());
         JPasswordField passwordField = new JPasswordField(dataTable.getValueAt(selectedRow, 4).toString());
+        passwordField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0, 63, 136)), // #003f88
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
         
-        dialog.add(new JLabel("Nama:"));
-        dialog.add(namaField);
-        dialog.add(new JLabel("Username:"));
-        dialog.add(usernameField);
-        dialog.add(new JLabel("Email:"));
-        dialog.add(emailField);
-        dialog.add(new JLabel("Password:"));
-        dialog.add(passwordField);
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(createDialogLabel("Nama:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(namaField, gbc);
         
-        JButton updateButton = new JButton("Update");
+        gbc.gridx = 0; gbc.gridy = 1;
+        dialog.add(createDialogLabel("Username:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(usernameField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 2;
+        dialog.add(createDialogLabel("Email:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(emailField, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 3;
+        dialog.add(createDialogLabel("Password:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(passwordField, gbc);
+        
+        JButton updateButton = createDialogButton("Update");
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(updateButton, gbc);
+        
         updateButton.addActionListener(e -> {
             try (Connection conn = Database.koneksiDatabase();
                  PreparedStatement pstmt = conn.prepareStatement(
@@ -587,7 +867,6 @@ public class dashboard extends javax.swing.JFrame {
             }
         });
         
-        dialog.add(updateButton);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
@@ -623,28 +902,45 @@ public class dashboard extends javax.swing.JFrame {
     private void showKomentarPanel() {
         contentPanel.removeAll();
         
-        // Create top toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton addButton = new JButton("Tambah Komentar");
-        JButton editButton = new JButton("Edit Komentar");
-        JButton deleteButton = new JButton("Hapus Komentar");
+        // Create top toolbar with updated styling
+        JPanel toolbar = new JPanel();
+        toolbar.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        toolbar.setBackground(Color.WHITE);
+        toolbar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JButton addButton = createActionButton("Tambah Komentar");
+        JButton editButton = createActionButton("Edit Komentar");
+        JButton deleteButton = createActionButton("Hapus Komentar");
         
         toolbar.add(addButton);
         toolbar.add(editButton);
         toolbar.add(deleteButton);
         
-        // Create table
+        // Create table with updated styling
         String[] columns = {"ID Komentar", "ID User", "Isi Komentar"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         dataTable = new JTable(model);
+        dataTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dataTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        dataTable.getTableHeader().setBackground(new Color(0, 41, 107)); // #00296b
+        dataTable.getTableHeader().setForeground(Color.WHITE);
+        dataTable.setRowHeight(25);
+        dataTable.setGridColor(new Color(230, 230, 230));
+        
         scrollPane = new JScrollPane(dataTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         
         // Load data
         loadKomentarData();
         
-        // Add components
-        contentPanel.add(toolbar, BorderLayout.NORTH);
-        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        // Add components with padding
+        JPanel contentWrapper = new JPanel(new BorderLayout());
+        contentWrapper.setBackground(Color.WHITE);
+        contentWrapper.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
+        contentWrapper.add(toolbar, BorderLayout.NORTH);
+        contentWrapper.add(scrollPane, BorderLayout.CENTER);
+        
+        contentPanel.add(contentWrapper);
         
         // Add action listeners
         addButton.addActionListener(e -> showAddKomentarDialog());
@@ -677,19 +973,33 @@ public class dashboard extends javax.swing.JFrame {
     }
     
     private void showAddKomentarDialog() {
-        JDialog dialog = new JDialog(this, "Tambah Komentar", true);
-        dialog.setLayout(new GridLayout(4, 2, 5, 5));
+        JDialog dialog = createStyledDialog("Tambah Komentar");
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        JTextField idUserField = new JTextField();
-        JTextArea isiKomentarArea = new JTextArea(5, 20);
+        JTextField idUserField = createDialogTextField();
+        JTextArea isiKomentarArea = createDialogTextArea();
         JScrollPane scrollPane = new JScrollPane(isiKomentarArea);
+        scrollPane.setPreferredSize(new Dimension(300, 100));
         
-        dialog.add(new JLabel("ID User:"));
-        dialog.add(idUserField);
-        dialog.add(new JLabel("Isi Komentar:"));
-        dialog.add(scrollPane);
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(createDialogLabel("ID User:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(idUserField, gbc);
         
-        JButton saveButton = new JButton("Simpan");
+        gbc.gridx = 0; gbc.gridy = 1;
+        dialog.add(createDialogLabel("Isi Komentar:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(scrollPane, gbc);
+        
+        JButton saveButton = createDialogButton("Simpan");
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(saveButton, gbc);
+        
         saveButton.addActionListener(e -> {
             try (Connection conn = Database.koneksiDatabase();
                  PreparedStatement pstmt = conn.prepareStatement(
@@ -706,7 +1016,6 @@ public class dashboard extends javax.swing.JFrame {
             }
         });
         
-        dialog.add(saveButton);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
@@ -719,19 +1028,35 @@ public class dashboard extends javax.swing.JFrame {
             return;
         }
         
-        JDialog dialog = new JDialog(this, "Edit Komentar", true);
-        dialog.setLayout(new GridLayout(4, 2, 5, 5));
+        JDialog dialog = createStyledDialog("Edit Komentar");
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        JTextField idUserField = new JTextField(dataTable.getValueAt(selectedRow, 1).toString());
-        JTextArea isiKomentarArea = new JTextArea(dataTable.getValueAt(selectedRow, 2).toString(), 5, 20);
+        JTextField idUserField = createDialogTextField();
+        idUserField.setText(dataTable.getValueAt(selectedRow, 1).toString());
+        JTextArea isiKomentarArea = createDialogTextArea();
+        isiKomentarArea.setText(dataTable.getValueAt(selectedRow, 2).toString());
         JScrollPane scrollPane = new JScrollPane(isiKomentarArea);
+        scrollPane.setPreferredSize(new Dimension(300, 100));
         
-        dialog.add(new JLabel("ID User:"));
-        dialog.add(idUserField);
-        dialog.add(new JLabel("Isi Komentar:"));
-        dialog.add(scrollPane);
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(createDialogLabel("ID User:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(idUserField, gbc);
         
-        JButton updateButton = new JButton("Update");
+        gbc.gridx = 0; gbc.gridy = 1;
+        dialog.add(createDialogLabel("Isi Komentar:"), gbc);
+        gbc.gridx = 1;
+        dialog.add(scrollPane, gbc);
+        
+        JButton updateButton = createDialogButton("Update");
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        dialog.add(updateButton, gbc);
+        
         updateButton.addActionListener(e -> {
             try (Connection conn = Database.koneksiDatabase();
                  PreparedStatement pstmt = conn.prepareStatement(
@@ -749,7 +1074,6 @@ public class dashboard extends javax.swing.JFrame {
             }
         });
         
-        dialog.add(updateButton);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
