@@ -35,9 +35,10 @@ public class LoginAdmin extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setBackground(new java.awt.Color(17, 41, 107));
         setPreferredSize(new java.awt.Dimension(1080, 720));
 
-        jPanel1.setBackground(new java.awt.Color(153, 153, 153));
+        jPanel1.setBackground(new java.awt.Color(17, 41, 107));
         jPanel1.setForeground(new java.awt.Color(255, 51, 51));
 
         jLabel1.setText("Username");
@@ -45,6 +46,7 @@ public class LoginAdmin extends javax.swing.JFrame {
         jLabel2.setText("Password");
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 48)); // NOI18N
+        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
         jLabel3.setText("LOGIN ADMIN");
 
         jButton1.setText("Login");
