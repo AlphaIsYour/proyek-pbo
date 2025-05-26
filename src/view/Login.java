@@ -4,6 +4,11 @@
  */
 package view;
 
+import java.awt.*;
+import java.sql.*;
+import javax.swing.*;
+import model.Database;
+
 /**
  *
  * @author Asus
@@ -15,6 +20,8 @@ public class Login extends javax.swing.JFrame {
      */
     public Login() {
         initComponents();
+        setLocationRelativeTo(null);
+        customizeComponents();
     }
 
     /**
@@ -29,11 +36,11 @@ public class Login extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        TUsername = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        BLogin = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
+        TPassword = new javax.swing.JPasswordField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -47,11 +54,22 @@ public class Login extends javax.swing.JFrame {
         jLabel2.setForeground(new java.awt.Color(255, 255, 255));
         jLabel2.setText("Username");
 
+        TUsername.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TUsernameActionPerformed(evt);
+            }
+        });
+
         jLabel3.setForeground(new java.awt.Color(255, 255, 255));
         jLabel3.setText("Password");
 
-        jButton1.setBackground(new java.awt.Color(204, 204, 204));
-        jButton1.setText("Login");
+        BLogin.setBackground(new java.awt.Color(204, 204, 204));
+        BLogin.setText("Login");
+        BLogin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BLoginActionPerformed(evt);
+            }
+        });
 
         jLabel4.setForeground(new java.awt.Color(255, 255, 255));
         jLabel4.setText("Dont have account? Register");
@@ -65,19 +83,19 @@ public class Login extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1)
                     .addComponent(jLabel2)
+                    .addComponent(jLabel3)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jTextField2, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jTextField1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE))
-                    .addComponent(jLabel3))
+                        .addComponent(TPassword, javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(TUsername, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)))
                 .addGap(104, 104, 104))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(212, 212, 212)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(172, 172, 172)
+                        .addComponent(jLabel4))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(184, 184, 184)
-                        .addComponent(jLabel4)))
+                        .addGap(200, 200, 200)
+                        .addComponent(BLogin, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -88,16 +106,16 @@ public class Login extends javax.swing.JFrame {
                 .addGap(101, 101, 101)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(TUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(47, 47, 47)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(63, 63, 63)
+                .addComponent(TPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(43, 43, 43)
                 .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton1)
-                .addContainerGap(184, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(BLogin)
+                .addContainerGap(210, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -110,58 +128,177 @@ public class Login extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 732, Short.MAX_VALUE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+    private void BLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BLoginActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_BLoginActionPerformed
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new Login().setVisible(true);
+    private void TUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TUsernameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_TUsernameActionPerformed
+
+    private void customizeComponents() {
+        // Set form title
+        setTitle("Login - Wellessplate");
+        
+        // Customize panel background
+        jPanel1.setBackground(new Color(0, 41, 107)); // #00296b
+        
+        // Customize labels
+        jLabel1.setForeground(new Color(253, 197, 0)); // #fdc500
+        jLabel1.setFont(new Font("Segoe UI", Font.BOLD, 48));
+        jLabel2.setForeground(Color.WHITE);
+        jLabel2.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        jLabel3.setForeground(Color.WHITE);
+        jLabel3.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        jLabel4.setForeground(Color.WHITE);
+        jLabel4.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        jLabel4.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Add hover effect and click handler to register label
+        jLabel4.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                Register regForm = new Register();
+                regForm.setVisible(true);
+                dispose();
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                jLabel4.setForeground(new Color(253, 197, 0)); // #fdc500
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                jLabel4.setForeground(Color.WHITE);
+            }
+        });
+        
+        // Customize text fields
+        TUsername.setPreferredSize(new Dimension(250, 30));
+        TUsername.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        TUsername.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(253, 197, 0)), // #fdc500
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        
+        // Style password field
+        TPassword.setPreferredSize(new Dimension(250, 30));
+        TPassword.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        TPassword.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(253, 197, 0)), // #fdc500
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        
+        // Customize login button
+        BLogin.setBackground(new Color(253, 197, 0)); // #fdc500
+        BLogin.setForeground(new Color(0, 41, 107)); // #00296b
+        BLogin.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        BLogin.setFocusPainted(false);
+        BLogin.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        BLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Add hover effect to login button
+        BLogin.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                BLogin.setBackground(new Color(255, 213, 0)); // #ffd500
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                BLogin.setBackground(new Color(253, 197, 0)); // #fdc500
+            }
+        });
+        
+        // Add action listener to login button
+        BLogin.addActionListener(evt -> {
+            String username = TUsername.getText();
+            String password = new String(((JPasswordField)TPassword).getPassword());
+            
+            if (username.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, 
+                    "Username dan Password tidak boleh kosong!", 
+                    "Peringatan", 
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            try (Connection conn = Database.koneksiDatabase();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT * FROM user WHERE username = ? AND password = ?")) {
+                
+                pstmt.setString(1, username);
+                pstmt.setString(2, password);
+                
+                ResultSet rs = pstmt.executeQuery();
+                
+                if (rs.next()) {
+                    // Login successful
+                    JOptionPane.showMessageDialog(this, 
+                        "Login berhasil!", 
+                        "Sukses", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                    
+                    // Open dashboard and close login window
+                    dashboardUser dash = new dashboardUser();
+                    dash.setVisible(true);
+                    this.dispose();
+                } else {
+                    // Login failed
+                    JOptionPane.showMessageDialog(this, 
+                        "Username atau Password salah!", 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    TPassword.setText(""); // Clear password field
+                }
+                
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error: " + ex.getMessage(), 
+                    "Database Error", 
+                    JOptionPane.ERROR_MESSAGE);
             }
         });
     }
 
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    
+                    // Customize Nimbus colors to match our theme
+                    UIManager.put("nimbusBase", new Color(0, 41, 107)); // #00296b
+                    UIManager.put("nimbusBlueGrey", new Color(0, 63, 136)); // #003f88
+                    UIManager.put("control", new Color(0, 80, 157)); // #00509d
+                    
+                    // Set default button colors
+                    UIManager.put("Button.background", new Color(253, 197, 0)); // #fdc500
+                    UIManager.put("Button.foreground", new Color(0, 41, 107)); // #00296b
+                    
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(Login.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(() -> {
+            new Login().setVisible(true);
+        });
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton BLogin;
+    private javax.swing.JPasswordField TPassword;
+    private javax.swing.JTextField TUsername;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
     // End of variables declaration//GEN-END:variables
 }
