@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 import model.Database;
+import model.UserSession;
 
 /**
  *
@@ -213,17 +214,17 @@ public class LoginAdmin extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(288, 288, 288)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(289, Short.MAX_VALUE)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(272, Short.MAX_VALUE))
+                .addGap(271, 271, 271))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(95, 95, 95)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(132, Short.MAX_VALUE)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(160, Short.MAX_VALUE))
+                .addGap(123, 123, 123))
         );
 
         pack();
@@ -239,38 +240,59 @@ public class LoginAdmin extends javax.swing.JFrame {
 
     private void BLoginActionPerformed(java.awt.event.ActionEvent evt) {
         String username = TUsername.getText();
-        String password = new String(((JPasswordField)TPassword).getPassword());
+        String password = new String(TPassword.getPassword());
         
         if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Username dan Password tidak boleh kosong!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                "Username dan password harus diisi",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
             return;
         }
         
-        try (Connection conn = Database.koneksiDatabase();
-             PreparedStatement pstmt = conn.prepareStatement(
-                 "SELECT * FROM admin WHERE username = ? AND password = ?")) {
+        try {
+            Database db = new Database();
+            Connection conn = db.getConnection();
             
-            pstmt.setString(1, username);
-            pstmt.setString(2, password);
+            String query = "SELECT * FROM admin WHERE username = ? AND password = ?";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
             
-            ResultSet rs = pstmt.executeQuery();
+            ResultSet rs = stmt.executeQuery();
             
             if (rs.next()) {
-                // Login successful
-                JOptionPane.showMessageDialog(this, "Login berhasil!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                int adminId = rs.getInt("id_admin");
+                String nama = rs.getString("nama");
                 
-                // Open dashboard and close login window
-                dashboard dash = new dashboard();
-                dash.setVisible(true);
-                this.dispose();
+                // Store admin info for later use
+                UserSession.getInstance().setUserId(adminId);
+                UserSession.getInstance().setUsername(username);
+                UserSession.getInstance().setNama(nama);
+                
+                // Close login window
+                dispose();
+                
+                // Open admin dashboard
+                dashboard dashboard = new dashboard();
+                dashboard.setVisible(true);
             } else {
-                // Login failed
-                JOptionPane.showMessageDialog(this, "Username atau Password salah!", "Error", JOptionPane.ERROR_MESSAGE);
-                TPassword.setText(""); // Clear password field
+                JOptionPane.showMessageDialog(this,
+                    "Username atau password salah",
+                    "Login Gagal",
+                    JOptionPane.ERROR_MESSAGE);
             }
             
+            rs.close();
+            stmt.close();
+            db.closeConnection();
+            
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+            System.err.println("Error during login: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this,
+                "Terjadi kesalahan saat login",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 

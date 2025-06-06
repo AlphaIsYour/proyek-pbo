@@ -6,7 +6,16 @@ package view;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import model.Database;
+import model.Komentar;
+import model.Resep;
 
 /**
  *
@@ -31,14 +40,71 @@ public class dashboardUser extends javax.swing.JFrame {
     private javax.swing.JPanel card7;
     private javax.swing.JPanel card8;
     private javax.swing.JPanel paginationPanel;
+    private javax.swing.JPanel commentPanel;
+    private javax.swing.JTextField commentField;
+    private javax.swing.JButton submitButton;
+    private javax.swing.JPanel commentsListPanel;
+    
+    private List<Resep> resepList;
+    private Database db;
+    private int currentPage = 1;
+    private int itemsPerPage = 8;
+    private List<Komentar> commentList;
+    private int currentUserId; // Store the current user's ID
     
     /**
      * Creates new form dashboardUser
      */
     public dashboardUser() {
+        db = new Database();
+        resepList = new ArrayList<>();
         initComponents();
         setLocationRelativeTo(null);
+        loadResepData();
         customizeComponents();
+        setupCommentSection();
+    }
+
+    private void loadResepData() {
+        resepList.clear();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = db.getConnection();
+            String query = "SELECT r.*, k.nama_kategori FROM resep r " +
+                         "LEFT JOIN kategori k ON r.id_kategori = k.id_kategori";
+            
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Resep resep = new Resep(
+                    rs.getInt("id_resep"),
+                    rs.getInt("id_kategori"),
+                    rs.getString("judul"),
+                    rs.getString("bahan"),
+                    rs.getString("alat"),
+                    rs.getString("langkah"),
+                    rs.getString("foto")
+                );
+                resep.setNama_kategori(rs.getString("nama_kategori"));
+                resepList.add(resep);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error loading recipes: " + e.getMessage(), 
+                "Database Error", 
+                JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing resources: " + e.getMessage());
+            }
+        }
     }
 
     private void customizeComponents() {
@@ -64,7 +130,7 @@ public class dashboardUser extends javax.swing.JFrame {
         bannerPanel.setBackground(Color.WHITE); // Set banner panel background to white
         
         try {
-            ImageIcon bannerIcon = new ImageIcon("src/images/banner.jpg");
+            ImageIcon bannerIcon = new ImageIcon("src/images/banner.png");
             Image img = bannerIcon.getImage().getScaledInstance(contentWidth, 280, Image.SCALE_SMOOTH);
             bannerLabel.setIcon(new ImageIcon(img));
         } catch (Exception e) {
@@ -96,26 +162,57 @@ public class dashboardUser extends javax.swing.JFrame {
         searchButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
         searchButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        // Setup card panels with dummy content
-        JPanel[] cardPanels = {card1, card2, card3, card4, card5, card6, card7, card8};
-        String[] dummyTitles = {
-            "Nasi Goreng", "Soto Ayam", "Rendang", "Gado-gado",
-            "Sate Ayam", "Mie Goreng", "Bakso", "Sop Buntut"
-        };
-        String[] dummyCategories = {
-            "Goreng", "Kuah", "Daging", "Sayur",
-            "Daging", "Goreng", "Kuah", "Daging"
-        };
-        for (int i = 0; i < cardPanels.length; i++) {
-            setupCard(cardPanels[i], dummyTitles[i], dummyCategories[i]);
-        }
+        // Load kategori for combobox
+        loadKategoriToCombo();
+        
+        // Setup card panels with real data
+        updateCardDisplay();
         
         // Setup pagination
-        paginationPanel.setBackground(Color.WHITE);
         setupPagination();
     }
     
-    private void setupCard(JPanel card, String title, String category) {
+    private void loadKategoriToCombo() {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = db.getConnection();
+            String query = "SELECT nama_kategori FROM kategori";
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+            
+            DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+            model.addElement("Semua");
+            
+            while (rs.next()) {
+                model.addElement(rs.getString("nama_kategori"));
+            }
+            
+            kategoriCombo.setModel(model);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error loading categories: " + e.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing resources: " + e.getMessage());
+            }
+        }
+    }
+    
+    private void setupCard(JPanel card, Resep resep) {
+        if (resep == null) {
+            card.setVisible(false);
+            return;
+        }
+        
+        card.setVisible(true);
         card.setLayout(new BorderLayout(5, 5));
         card.setBackground(new Color(0, 63, 136));
         card.setBorder(BorderFactory.createCompoundBorder(
@@ -123,40 +220,48 @@ public class dashboardUser extends javax.swing.JFrame {
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         
-        // Image panel dengan fixed height yang lebih tinggi
+        // Image panel
         JPanel imagePanel = new JPanel() {
             @Override
             public Dimension getPreferredSize() {
-                return new Dimension(getWidth(), 160); // Fixed height 160px
+                return new Dimension(getWidth(), 160);
             }
             
             @Override
-            public Dimension getMinimumSize() {
-                return getPreferredSize();
-            }
-            
-            @Override
-            public Dimension getMaximumSize() {
-                return getPreferredSize();
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (resep.getFoto() != null && !resep.getFoto().isEmpty()) {
+                    try {
+                        File imageFile = new File(resep.getFoto());
+                        if (imageFile.exists()) {
+                            Image img = ImageIO.read(imageFile);
+                            g.drawImage(img, 0, 0, getWidth(), getHeight(), this);
+                            return;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Error loading image: " + e.getMessage());
+                    }
+                }
+                // Default background if no image
+                g.setColor(Color.LIGHT_GRAY);
+                g.fillRect(0, 0, getWidth(), getHeight());
             }
         };
-        imagePanel.setBackground(new Color(253, 197, 0));
+        imagePanel.setBackground(Color.LIGHT_GRAY);
         card.add(imagePanel, BorderLayout.CENTER);
         
-        // Info panel (title & category)
+        // Info panel
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(new Color(0, 63, 136));
         infoPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
         
-        // Title label
-        JLabel titleLabel = new JLabel(title);
+        JLabel titleLabel = new JLabel(resep.getJudul());
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        // Category label
-        JLabel categoryLabel = new JLabel(category);
+        JLabel categoryLabel = new JLabel(resep.getNama_kategori());
         categoryLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         categoryLabel.setForeground(new Color(253, 197, 0));
         categoryLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -172,7 +277,8 @@ public class dashboardUser extends javax.swing.JFrame {
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                JOptionPane.showMessageDialog(card, "Buka detail resep: " + title);
+                halamanResep detailView = new halamanResep(resep);
+                detailView.setVisible(true);
             }
             
             @Override
@@ -189,23 +295,72 @@ public class dashboardUser extends javax.swing.JFrame {
         });
     }
     
+    private void updateCardDisplay() {
+        JPanel[] cardPanels = {card1, card2, card3, card4, card5, card6, card7, card8};
+        int startIdx = (currentPage - 1) * itemsPerPage;
+        
+        for (int i = 0; i < cardPanels.length; i++) {
+            cardPanels[i].removeAll();
+            if (startIdx + i < resepList.size()) {
+                setupCard(cardPanels[i], resepList.get(startIdx + i));
+            } else {
+                cardPanels[i].setVisible(false);
+            }
+        }
+        
+        cardPanel.revalidate();
+        cardPanel.repaint();
+    }
+    
     private void setupPagination() {
         paginationPanel.removeAll();
         
-        JButton prevBtn = new JButton("Prev");
-        JButton nextBtn = new JButton("Next");
-        JButton[] pageButtons = new JButton[3];
+        int totalPages = (int) Math.ceil((double) resepList.size() / itemsPerPage);
         
-        for (int i = 0; i < pageButtons.length; i++) {
-            pageButtons[i] = new JButton(String.valueOf(i + 1));
-            styleButton(pageButtons[i]);
-            paginationPanel.add(pageButtons[i]);
-        }
+        JButton prevBtn = new JButton("Prev");
+        prevBtn.setEnabled(currentPage > 1);
+        prevBtn.addActionListener(e -> {
+            if (currentPage > 1) {
+                currentPage--;
+                updateCardDisplay();
+                setupPagination();
+            }
+        });
+        
+        JButton nextBtn = new JButton("Next");
+        nextBtn.setEnabled(currentPage < totalPages);
+        nextBtn.addActionListener(e -> {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updateCardDisplay();
+                setupPagination();
+            }
+        });
         
         styleButton(prevBtn);
         styleButton(nextBtn);
         
-        paginationPanel.add(prevBtn, 0);
+        paginationPanel.add(prevBtn);
+        
+        for (int i = 1; i <= totalPages; i++) {
+            JButton pageBtn = new JButton(String.valueOf(i));
+            styleButton(pageBtn);
+            
+            if (i == currentPage) {
+                pageBtn.setBackground(new Color(0, 63, 136));
+                pageBtn.setForeground(Color.WHITE);
+            }
+            
+            final int page = i;
+            pageBtn.addActionListener(e -> {
+                currentPage = page;
+                updateCardDisplay();
+                setupPagination();
+            });
+            
+            paginationPanel.add(pageBtn);
+        }
+        
         paginationPanel.add(nextBtn);
         
         paginationPanel.revalidate();
@@ -219,6 +374,200 @@ public class dashboardUser extends javax.swing.JFrame {
         button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
+    }
+
+    private void setupCommentSection() {
+        // Initialize comment list
+        commentList = new ArrayList<>();
+        
+        // Create comment panel
+        commentPanel = new JPanel();
+        commentPanel.setLayout(new BoxLayout(commentPanel, BoxLayout.Y_AXIS));
+        commentPanel.setBackground(Color.WHITE);
+        commentPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        
+        // Create input panel
+        JPanel inputPanel = new JPanel(new BorderLayout(10, 0));
+        inputPanel.setBackground(Color.WHITE);
+        
+        // Create comment field
+        commentField = new JTextField();
+        commentField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        commentField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(253, 197, 0)),
+            BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+        commentField.setForeground(Color.GRAY);
+        commentField.setText("Tulis komentar disini");
+        commentField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (commentField.getText().equals("Tulis komentar disini")) {
+                    commentField.setText("");
+                    commentField.setForeground(Color.BLACK);
+                }
+            }
+            
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (commentField.getText().isEmpty()) {
+                    commentField.setForeground(Color.GRAY);
+                    commentField.setText("Tulis komentar disini");
+                }
+            }
+        });
+        
+        // Create submit button
+        submitButton = new JButton("Submit");
+        submitButton.setBackground(new Color(253, 197, 0));
+        submitButton.setForeground(new Color(0, 41, 107));
+        submitButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        submitButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        submitButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        submitButton.setFocusPainted(false);
+        submitButton.addActionListener(e -> submitComment());
+        
+        // Add components to input panel
+        inputPanel.add(commentField, BorderLayout.CENTER);
+        inputPanel.add(submitButton, BorderLayout.EAST);
+        
+        // Create comments list panel
+        commentsListPanel = new JPanel();
+        commentsListPanel.setLayout(new BoxLayout(commentsListPanel, BoxLayout.Y_AXIS));
+        commentsListPanel.setBackground(Color.WHITE);
+        
+        // Add components to comment panel
+        commentPanel.add(inputPanel);
+        commentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        commentPanel.add(commentsListPanel);
+        
+        // Add comment panel to main panel after pagination
+        mainPanel.add(commentPanel);
+        
+        // Load existing comments
+        loadComments();
+    }
+    
+    private void loadComments() {
+        commentList.clear();
+        commentsListPanel.removeAll();
+        
+        try {
+            Connection conn = db.getConnection();
+            String query = "SELECT k.*, u.nama FROM komentar k " +
+                         "JOIN user u ON k.id_user = u.id_user " +
+                         "ORDER BY k.tanggal DESC";
+            
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Komentar komentar = new Komentar(
+                    rs.getInt("id_komentar"),
+                    rs.getInt("id_user"),
+                    rs.getString("isi_komentar"),
+                    rs.getDate("tanggal")
+                );
+                komentar.setNama_user(rs.getString("nama"));
+                commentList.add(komentar);
+                addCommentToPanel(komentar);
+            }
+            
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            System.err.println("Error loading comments: " + e.getMessage());
+        }
+        
+        commentsListPanel.revalidate();
+        commentsListPanel.repaint();
+    }
+    
+    private void submitComment() {
+        String commentText = commentField.getText();
+        if (commentText.equals("Tulis komentar disini") || commentText.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                "Silakan tulis komentar Anda terlebih dahulu", 
+                "Peringatan", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        try {
+            Connection conn = db.getConnection();
+            
+            // First, get the next id_komentar value
+            int nextId = 1;
+            String getMaxIdQuery = "SELECT MAX(id_komentar) FROM komentar";
+            PreparedStatement maxIdStmt = conn.prepareStatement(getMaxIdQuery);
+            ResultSet rs = maxIdStmt.executeQuery();
+            if (rs.next() && rs.getObject(1) != null) {
+                nextId = rs.getInt(1) + 1;
+            }
+            rs.close();
+            maxIdStmt.close();
+            
+            // Now insert the comment with the new ID
+            String query = "INSERT INTO komentar (id_komentar, id_user, isi_komentar, tanggal) VALUES (?, ?, ?, NOW())";
+            
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setInt(1, nextId);
+            stmt.setInt(2, currentUserId);
+            stmt.setString(3, commentText);
+            
+            int result = stmt.executeUpdate();
+            if (result > 0) {
+                commentField.setText("Tulis komentar disini");
+                commentField.setForeground(Color.GRAY);
+                loadComments(); // Reload comments to show the new one
+            }
+            
+            stmt.close();
+        } catch (SQLException e) {
+            System.err.println("Error submitting comment: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, 
+                "Gagal menambahkan komentar", 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void addCommentToPanel(Komentar komentar) {
+        // Create comment container
+        JPanel commentContainer = new JPanel();
+        commentContainer.setLayout(new BorderLayout(10, 5));
+        commentContainer.setBackground(new Color(245, 245, 245));
+        commentContainer.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+        
+        // User name and date
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(null);
+        
+        JLabel nameLabel = new JLabel(komentar.getNama_user());
+        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        nameLabel.setForeground(new Color(0, 41, 107));
+        
+        JLabel dateLabel = new JLabel(new SimpleDateFormat("dd MMM yyyy").format(komentar.getTanggal()));
+        dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dateLabel.setForeground(Color.GRAY);
+        
+        headerPanel.add(nameLabel, BorderLayout.WEST);
+        headerPanel.add(dateLabel, BorderLayout.EAST);
+        
+        // Comment text
+        JLabel commentLabel = new JLabel("<html><p style='width: 500px;'>" + komentar.getIsi_komentar() + "</p></html>");
+        commentLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        
+        // Add components to container
+        commentContainer.add(headerPanel, BorderLayout.NORTH);
+        commentContainer.add(commentLabel, BorderLayout.CENTER);
+        
+        // Add container to list panel
+        commentsListPanel.add(commentContainer);
+        commentsListPanel.add(Box.createRigidArea(new Dimension(0, 10)));
     }
 
     /**
@@ -329,5 +678,10 @@ public class dashboardUser extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> {
                 new dashboardUser().setVisible(true);
         });
+    }
+
+    // Add this method to set the current user ID
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
     }
 }
