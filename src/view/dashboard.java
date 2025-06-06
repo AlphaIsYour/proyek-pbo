@@ -6,6 +6,7 @@ package view;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.sql.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -174,7 +175,7 @@ public class dashboard extends javax.swing.JFrame {
         toolbar.add(deleteButton);
         
         // Create table with updated styling
-        String[] columns = {"ID", "Judul", "Bahan", "Alat", "Langkah"};
+        String[] columns = {"ID", "Judul", "Kategori", "Bahan", "Alat", "Langkah", "Foto"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         dataTable = new JTable(model);
         dataTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -212,17 +213,26 @@ public class dashboard extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) dataTable.getModel();
         model.setRowCount(0);
         
-        try (Connection conn = Database.koneksiDatabase();
+        // Set up table columns
+        model.setColumnIdentifiers(new String[]{
+            "ID", "Judul", "Kategori", "Bahan", "Alat", "Langkah", "Foto"
+        });
+        
+        try (Connection conn = new Database().getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM resep")) {
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT r.*, k.nama_kategori FROM resep r " +
+                 "LEFT JOIN kategori k ON r.id_kategori = k.id_kategori")) {
             
             while (rs.next()) {
                 Object[] row = {
                     rs.getInt("id_resep"),
                     rs.getString("judul"),
+                    rs.getString("nama_kategori"),
                     rs.getString("bahan"),
                     rs.getString("alat"),
-                    rs.getString("langkah")
+                    rs.getString("langkah"),
+                    rs.getString("foto")
                 };
                 model.addRow(row);
             }
@@ -292,59 +302,176 @@ public class dashboard extends javax.swing.JFrame {
         return area;
     }
 
+    private String saveImageToFolder(File sourceFile) {
+        try {
+            // Create images directory if it doesn't exist
+            File imagesDir = new File("src/images");
+            if (!imagesDir.exists()) {
+                imagesDir.mkdirs();
+            }
+            
+            // Use original filename
+            String fileName = sourceFile.getName();
+            File destinationFile = new File(imagesDir, fileName);
+            
+            // If file with same name exists, add number
+            int counter = 1;
+            while (destinationFile.exists()) {
+                String nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+                String extension = fileName.substring(fileName.lastIndexOf('.'));
+                destinationFile = new File(imagesDir, nameWithoutExt + "(" + counter + ")" + extension);
+                counter++;
+            }
+            
+            // Copy file
+            java.nio.file.Files.copy(
+                sourceFile.toPath(),
+                destinationFile.toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING
+            );
+            
+            // Return just the filename
+            return destinationFile.getName();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private void showAddResepDialog() {
         JDialog dialog = createStyledDialog("Tambah Resep");
         dialog.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         
+        // Create main panel with GridBagLayout
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        
+        // Left panel for basic info
+        JPanel leftPanel = new JPanel(new GridBagLayout());
+        leftPanel.setBorder(BorderFactory.createTitledBorder("Informasi Dasar"));
+        GridBagConstraints leftGbc = new GridBagConstraints();
+        leftGbc.insets = new Insets(5, 5, 5, 5);
+        leftGbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Judul
+        leftGbc.gridx = 0; leftGbc.gridy = 0;
+        leftPanel.add(new JLabel("Judul:"), leftGbc);
         JTextField judulField = createDialogTextField();
-        JTextField bahanField = createDialogTextField();
-        JTextField alatField = createDialogTextField();
+        leftGbc.gridx = 1;
+        leftPanel.add(judulField, leftGbc);
+        
+        // Kategori
+        leftGbc.gridx = 0; leftGbc.gridy = 1;
+        leftPanel.add(new JLabel("Kategori:"), leftGbc);
+        JComboBox<String> kategoriCombo = new JComboBox<>();
+        loadKategoriToCombo(kategoriCombo);
+        leftGbc.gridx = 1;
+        leftPanel.add(kategoriCombo, leftGbc);
+        
+        // Foto
+        leftGbc.gridx = 0; leftGbc.gridy = 2;
+        leftPanel.add(new JLabel("Foto:"), leftGbc);
+        JPanel fotoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JTextField fotoPathField = new JTextField(15);
+        fotoPathField.setEditable(false);
+        JButton browseButton = new JButton("Browse");
+        fotoPanel.add(fotoPathField);
+        fotoPanel.add(browseButton);
+        leftGbc.gridx = 1;
+        leftPanel.add(fotoPanel, leftGbc);
+        
+        // Right panel for recipe details
+        JPanel rightPanel = new JPanel(new GridBagLayout());
+        rightPanel.setBorder(BorderFactory.createTitledBorder("Detail Resep"));
+        GridBagConstraints rightGbc = new GridBagConstraints();
+        rightGbc.insets = new Insets(5, 5, 5, 5);
+        rightGbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Bahan
+        rightGbc.gridx = 0; rightGbc.gridy = 0;
+        rightPanel.add(new JLabel("Bahan:"), rightGbc);
+        JTextArea bahanArea = createDialogTextArea();
+        JScrollPane bahanScroll = new JScrollPane(bahanArea);
+        bahanScroll.setPreferredSize(new Dimension(250, 100));
+        rightGbc.gridx = 1;
+        rightPanel.add(bahanScroll, rightGbc);
+        
+        // Alat
+        rightGbc.gridx = 0; rightGbc.gridy = 1;
+        rightPanel.add(new JLabel("Alat:"), rightGbc);
+        JTextArea alatArea = createDialogTextArea();
+        JScrollPane alatScroll = new JScrollPane(alatArea);
+        alatScroll.setPreferredSize(new Dimension(250, 100));
+        rightGbc.gridx = 1;
+        rightPanel.add(alatScroll, rightGbc);
+        
+        // Langkah
+        rightGbc.gridx = 0; rightGbc.gridy = 2;
+        rightPanel.add(new JLabel("Langkah:"), rightGbc);
         JTextArea langkahArea = createDialogTextArea();
-        JScrollPane scrollPane = new JScrollPane(langkahArea);
-        scrollPane.setPreferredSize(new Dimension(300, 100));
+        JScrollPane langkahScroll = new JScrollPane(langkahArea);
+        langkahScroll.setPreferredSize(new Dimension(250, 100));
+        rightGbc.gridx = 1;
+        rightPanel.add(langkahScroll, rightGbc);
         
+        // Add panels to main panel
         gbc.gridx = 0; gbc.gridy = 0;
-        dialog.add(createDialogLabel("Judul:"), gbc);
+        mainPanel.add(leftPanel, gbc);
         gbc.gridx = 1;
-        dialog.add(judulField, gbc);
+        mainPanel.add(rightPanel, gbc);
         
+        // Add main panel to dialog
+        dialog.add(mainPanel);
+        
+        // Save button
+        JButton saveButton = new JButton("Simpan");
         gbc.gridx = 0; gbc.gridy = 1;
-        dialog.add(createDialogLabel("Bahan:"), gbc);
-        gbc.gridx = 1;
-        dialog.add(bahanField, gbc);
-        
-        gbc.gridx = 0; gbc.gridy = 2;
-        dialog.add(createDialogLabel("Alat:"), gbc);
-        gbc.gridx = 1;
-        dialog.add(alatField, gbc);
-        
-        gbc.gridx = 0; gbc.gridy = 3;
-        dialog.add(createDialogLabel("Langkah:"), gbc);
-        gbc.gridx = 1;
-        dialog.add(scrollPane, gbc);
-        
-        JButton saveButton = createDialogButton("Simpan");
-        gbc.gridx = 0; gbc.gridy = 4;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         dialog.add(saveButton, gbc);
         
+        // Browse button action
+        browseButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Image Files", "jpg", "jpeg", "png", "gif"));
+            
+            if (fileChooser.showOpenDialog(dialog) == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                String savedImagePath = saveImageToFolder(selectedFile);
+                if (savedImagePath != null) {
+                    fotoPathField.setText(savedImagePath);
+                } else {
+                    JOptionPane.showMessageDialog(dialog, 
+                        "Gagal menyimpan gambar", 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        
+        // Save button action
         saveButton.addActionListener(e -> {
-            try (Connection conn = Database.koneksiDatabase();
-                 PreparedStatement pstmt = conn.prepareStatement(
-                     "INSERT INTO resep (judul, bahan, alat, langkah) VALUES (?, ?, ?, ?)")) {
+            try (Connection conn = new Database().getConnection()) {
+                // Get selected kategori ID
+                String selectedKategori = (String) kategoriCombo.getSelectedItem();
+                int kategoriId = getKategoriId(conn, selectedKategori);
                 
-                pstmt.setString(1, judulField.getText());
-                pstmt.setString(2, bahanField.getText());
-                pstmt.setString(3, alatField.getText());
-                pstmt.setString(4, langkahArea.getText());
-                pstmt.executeUpdate();
-                
-                loadResepData();
-                dialog.dispose();
+                String sql = "INSERT INTO resep (judul, id_kategori, bahan, alat, langkah, foto) VALUES (?, ?, ?, ?, ?, ?)";
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, judulField.getText());
+                    pstmt.setInt(2, kategoriId);
+                    pstmt.setString(3, bahanArea.getText());
+                    pstmt.setString(4, alatArea.getText());
+                    pstmt.setString(5, langkahArea.getText());
+                    pstmt.setString(6, fotoPathField.getText());
+                    
+                    pstmt.executeUpdate();
+                    loadResepData();
+                    dialog.dispose();
+                }
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(dialog, "Error saving data: " + ex.getMessage());
             }
@@ -353,6 +480,31 @@ public class dashboard extends javax.swing.JFrame {
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
+    }
+    
+    private void loadKategoriToCombo(JComboBox<String> comboBox) {
+        try (Connection conn = new Database().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT nama_kategori FROM kategori")) {
+            
+            while (rs.next()) {
+                comboBox.addItem(rs.getString("nama_kategori"));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading categories: " + e.getMessage());
+        }
+    }
+    
+    private int getKategoriId(Connection conn, String namaKategori) throws SQLException {
+        String sql = "SELECT id_kategori FROM kategori WHERE nama_kategori = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, namaKategori);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id_kategori");
+            }
+        }
+        return 0; // Return 0 if not found
     }
     
     private void showEditResepDialog() {
@@ -365,60 +517,155 @@ public class dashboard extends javax.swing.JFrame {
         JDialog dialog = createStyledDialog("Edit Resep");
         dialog.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         
+        // Create main panel with GridBagLayout
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        
+        // Left panel for basic info
+        JPanel leftPanel = new JPanel(new GridBagLayout());
+        leftPanel.setBorder(BorderFactory.createTitledBorder("Informasi Dasar"));
+        GridBagConstraints leftGbc = new GridBagConstraints();
+        leftGbc.insets = new Insets(5, 5, 5, 5);
+        leftGbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Judul
+        leftGbc.gridx = 0; leftGbc.gridy = 0;
+        leftPanel.add(new JLabel("Judul:"), leftGbc);
         JTextField judulField = createDialogTextField();
         judulField.setText(dataTable.getValueAt(selectedRow, 1).toString());
-        JTextField bahanField = createDialogTextField();
-        bahanField.setText(dataTable.getValueAt(selectedRow, 2).toString());
-        JTextField alatField = createDialogTextField();
-        alatField.setText(dataTable.getValueAt(selectedRow, 3).toString());
+        leftGbc.gridx = 1;
+        leftPanel.add(judulField, leftGbc);
+        
+        // Kategori
+        leftGbc.gridx = 0; leftGbc.gridy = 1;
+        leftPanel.add(new JLabel("Kategori:"), leftGbc);
+        JComboBox<String> kategoriCombo = new JComboBox<>();
+        loadKategoriToCombo(kategoriCombo);
+        String currentKategori = dataTable.getValueAt(selectedRow, 2) != null ? 
+            dataTable.getValueAt(selectedRow, 2).toString() : "";
+        kategoriCombo.setSelectedItem(currentKategori);
+        leftGbc.gridx = 1;
+        leftPanel.add(kategoriCombo, leftGbc);
+        
+        // Foto
+        leftGbc.gridx = 0; leftGbc.gridy = 2;
+        leftPanel.add(new JLabel("Foto:"), leftGbc);
+        JPanel fotoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JTextField fotoPathField = new JTextField(15);
+        fotoPathField.setEditable(false);
+        String currentFoto = dataTable.getValueAt(selectedRow, 6) != null ? 
+            dataTable.getValueAt(selectedRow, 6).toString() : "";
+        fotoPathField.setText(currentFoto);
+        JButton browseButton = new JButton("Browse");
+        fotoPanel.add(fotoPathField);
+        fotoPanel.add(browseButton);
+        leftGbc.gridx = 1;
+        leftPanel.add(fotoPanel, leftGbc);
+        
+        // Right panel for recipe details
+        JPanel rightPanel = new JPanel(new GridBagLayout());
+        rightPanel.setBorder(BorderFactory.createTitledBorder("Detail Resep"));
+        GridBagConstraints rightGbc = new GridBagConstraints();
+        rightGbc.insets = new Insets(5, 5, 5, 5);
+        rightGbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Bahan
+        rightGbc.gridx = 0; rightGbc.gridy = 0;
+        rightPanel.add(new JLabel("Bahan:"), rightGbc);
+        JTextArea bahanArea = createDialogTextArea();
+        bahanArea.setText(dataTable.getValueAt(selectedRow, 3).toString());
+        JScrollPane bahanScroll = new JScrollPane(bahanArea);
+        bahanScroll.setPreferredSize(new Dimension(250, 100));
+        rightGbc.gridx = 1;
+        rightPanel.add(bahanScroll, rightGbc);
+        
+        // Alat
+        rightGbc.gridx = 0; rightGbc.gridy = 1;
+        rightPanel.add(new JLabel("Alat:"), rightGbc);
+        JTextArea alatArea = createDialogTextArea();
+        alatArea.setText(dataTable.getValueAt(selectedRow, 4).toString());
+        JScrollPane alatScroll = new JScrollPane(alatArea);
+        alatScroll.setPreferredSize(new Dimension(250, 100));
+        rightGbc.gridx = 1;
+        rightPanel.add(alatScroll, rightGbc);
+        
+        // Langkah
+        rightGbc.gridx = 0; rightGbc.gridy = 2;
+        rightPanel.add(new JLabel("Langkah:"), rightGbc);
         JTextArea langkahArea = createDialogTextArea();
-        langkahArea.setText(dataTable.getValueAt(selectedRow, 4).toString());
-        JScrollPane scrollPane = new JScrollPane(langkahArea);
-        scrollPane.setPreferredSize(new Dimension(300, 100));
+        langkahArea.setText(dataTable.getValueAt(selectedRow, 5).toString());
+        JScrollPane langkahScroll = new JScrollPane(langkahArea);
+        langkahScroll.setPreferredSize(new Dimension(250, 100));
+        rightGbc.gridx = 1;
+        rightPanel.add(langkahScroll, rightGbc);
         
+        // Add panels to main panel
         gbc.gridx = 0; gbc.gridy = 0;
-        dialog.add(createDialogLabel("Judul:"), gbc);
+        mainPanel.add(leftPanel, gbc);
         gbc.gridx = 1;
-        dialog.add(judulField, gbc);
+        mainPanel.add(rightPanel, gbc);
         
+        // Add main panel to dialog
+        dialog.add(mainPanel);
+        
+        // Update button
+        JButton updateButton = new JButton("Update");
         gbc.gridx = 0; gbc.gridy = 1;
-        dialog.add(createDialogLabel("Bahan:"), gbc);
-        gbc.gridx = 1;
-        dialog.add(bahanField, gbc);
-        
-        gbc.gridx = 0; gbc.gridy = 2;
-        dialog.add(createDialogLabel("Alat:"), gbc);
-        gbc.gridx = 1;
-        dialog.add(alatField, gbc);
-        
-        gbc.gridx = 0; gbc.gridy = 3;
-        dialog.add(createDialogLabel("Langkah:"), gbc);
-        gbc.gridx = 1;
-        dialog.add(scrollPane, gbc);
-        
-        JButton updateButton = createDialogButton("Update");
-        gbc.gridx = 0; gbc.gridy = 4;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         dialog.add(updateButton, gbc);
         
+        // Browse button action
+        browseButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Image Files", "jpg", "jpeg", "png", "gif"));
+            
+            if (fileChooser.showOpenDialog(dialog) == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                String savedImagePath = saveImageToFolder(selectedFile);
+                if (savedImagePath != null) {
+                    // Delete old image if exists
+                    String oldImagePath = fotoPathField.getText();
+                    if (!oldImagePath.isEmpty()) {
+                        File oldImage = new File("src/images/" + oldImagePath);
+                        if (oldImage.exists()) {
+                            oldImage.delete();
+                        }
+                    }
+                    fotoPathField.setText(savedImagePath);
+                } else {
+                    JOptionPane.showMessageDialog(dialog, 
+                        "Gagal menyimpan gambar", 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        
+        // Update button action
         updateButton.addActionListener(e -> {
-            try (Connection conn = Database.koneksiDatabase();
-                 PreparedStatement pstmt = conn.prepareStatement(
-                     "UPDATE resep SET judul=?, bahan=?, alat=?, langkah=? WHERE id_resep=?")) {
+            try (Connection conn = new Database().getConnection()) {
+                // Get selected kategori ID
+                String selectedKategori = (String) kategoriCombo.getSelectedItem();
+                int kategoriId = getKategoriId(conn, selectedKategori);
                 
-                pstmt.setString(1, judulField.getText());
-                pstmt.setString(2, bahanField.getText());
-                pstmt.setString(3, alatField.getText());
-                pstmt.setString(4, langkahArea.getText());
-                pstmt.setInt(5, (Integer)dataTable.getValueAt(selectedRow, 0));
-                pstmt.executeUpdate();
-                
-                loadResepData();
-                dialog.dispose();
+                String sql = "UPDATE resep SET judul=?, id_kategori=?, bahan=?, alat=?, langkah=?, foto=? WHERE id_resep=?";
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, judulField.getText());
+                    pstmt.setInt(2, kategoriId);
+                    pstmt.setString(3, bahanArea.getText());
+                    pstmt.setString(4, alatArea.getText());
+                    pstmt.setString(5, langkahArea.getText());
+                    pstmt.setString(6, fotoPathField.getText());
+                    pstmt.setInt(7, (Integer)dataTable.getValueAt(selectedRow, 0));
+                    
+                    pstmt.executeUpdate();
+                    loadResepData();
+                    dialog.dispose();
+                }
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(dialog, "Error updating data: " + ex.getMessage());
             }
@@ -442,9 +689,18 @@ public class dashboard extends javax.swing.JFrame {
             JOptionPane.YES_NO_OPTION);
             
         if (confirm == JOptionPane.YES_OPTION) {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "DELETE FROM resep WHERE id_resep=?")) {
+                
+                // Delete associated image file if exists
+                String imageName = dataTable.getValueAt(selectedRow, 6).toString();
+                if (imageName != null && !imageName.isEmpty()) {
+                    File imageFile = new File("src/images/" + imageName);
+                    if (imageFile.exists()) {
+                        imageFile.delete();
+                    }
+                }
                 
                 pstmt.setInt(1, (Integer)dataTable.getValueAt(selectedRow, 0));
                 pstmt.executeUpdate();
@@ -512,7 +768,7 @@ public class dashboard extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) dataTable.getModel();
         model.setRowCount(0);
         
-        try (Connection conn = Database.koneksiDatabase();
+        try (Connection conn = new Database().getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM kategori")) {
             
@@ -559,7 +815,7 @@ public class dashboard extends javax.swing.JFrame {
         dialog.add(saveButton, gbc);
         
         saveButton.addActionListener(e -> {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "INSERT INTO kategori (id_kategori, nama_kategori) VALUES (?, ?)")) {
                 
@@ -616,7 +872,7 @@ public class dashboard extends javax.swing.JFrame {
         dialog.add(updateButton, gbc);
         
         updateButton.addActionListener(e -> {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "UPDATE kategori SET nama_kategori=? WHERE id_kategori=?")) {
                 
@@ -649,7 +905,7 @@ public class dashboard extends javax.swing.JFrame {
             JOptionPane.YES_NO_OPTION);
             
         if (confirm == JOptionPane.YES_OPTION) {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "DELETE FROM kategori WHERE id_kategori=?")) {
                 
@@ -719,7 +975,7 @@ public class dashboard extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) dataTable.getModel();
         model.setRowCount(0);
         
-        try (Connection conn = Database.koneksiDatabase();
+        try (Connection conn = new Database().getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM user")) {
             
@@ -785,7 +1041,7 @@ public class dashboard extends javax.swing.JFrame {
         dialog.add(saveButton, gbc);
         
         saveButton.addActionListener(e -> {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "INSERT INTO user (nama, username, email, password) VALUES (?, ?, ?, ?)")) {
                 
@@ -859,7 +1115,7 @@ public class dashboard extends javax.swing.JFrame {
         dialog.add(updateButton, gbc);
         
         updateButton.addActionListener(e -> {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "UPDATE user SET nama=?, username=?, email=?, password=? WHERE id_user=?")) {
                 
@@ -895,7 +1151,7 @@ public class dashboard extends javax.swing.JFrame {
             JOptionPane.YES_NO_OPTION);
             
         if (confirm == JOptionPane.YES_OPTION) {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "DELETE FROM user WHERE id_user=?")) {
                 
@@ -965,7 +1221,7 @@ public class dashboard extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) dataTable.getModel();
         model.setRowCount(0);
         
-        try (Connection conn = Database.koneksiDatabase();
+        try (Connection conn = new Database().getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM komentar")) {
             
@@ -1011,7 +1267,7 @@ public class dashboard extends javax.swing.JFrame {
         dialog.add(saveButton, gbc);
         
         saveButton.addActionListener(e -> {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "INSERT INTO komentar (id_user, isi_komentar) VALUES (?, ?)")) {
                 
@@ -1068,7 +1324,7 @@ public class dashboard extends javax.swing.JFrame {
         dialog.add(updateButton, gbc);
         
         updateButton.addActionListener(e -> {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "UPDATE komentar SET id_user=?, isi_komentar=? WHERE id_komentar=?")) {
                 
@@ -1102,7 +1358,7 @@ public class dashboard extends javax.swing.JFrame {
             JOptionPane.YES_NO_OPTION);
             
         if (confirm == JOptionPane.YES_OPTION) {
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "DELETE FROM komentar WHERE id_komentar=?")) {
                 

@@ -5,10 +5,9 @@ public class UserSession {
     private int userId;
     private String username;
     private String nama;
-    private String role;
     
     private UserSession() {
-        // Private constructor to enforce singleton pattern
+        // Private constructor to prevent instantiation
     }
     
     public static UserSession getInstance() {
@@ -18,43 +17,33 @@ public class UserSession {
         return instance;
     }
     
-    public void clearSession() {
-        userId = 0;
-        username = null;
-        nama = null;
-        role = null;
-    }
-    
-    // Getters and Setters
-    public int getUserId() {
-        return userId;
-    }
-    
     public void setUserId(int userId) {
         this.userId = userId;
     }
     
-    public String getUsername() {
-        return username;
+    public int getUserId() {
+        return userId;
     }
     
     public void setUsername(String username) {
         this.username = username;
     }
     
-    public String getNama() {
-        return nama;
+    public String getUsername() {
+        return username;
     }
     
     public void setNama(String nama) {
         this.nama = nama;
     }
     
-    public String getRole() {
-        return role;
+    public String getNama() {
+        return nama;
     }
     
-    public void setRole(String role) {
-        this.role = role;
+    public void clearSession() {
+        this.userId = 0;
+        this.username = null;
+        this.nama = null;
     }
 } 

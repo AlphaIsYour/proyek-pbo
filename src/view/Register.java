@@ -128,7 +128,7 @@ public class Register extends javax.swing.JFrame {
                 return;
             }
             
-            try (Connection conn = Database.koneksiDatabase();
+            try (Connection conn = new Database().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(
                      "INSERT INTO user (nama, username, password) VALUES (?, ?, ?)")) {
                 

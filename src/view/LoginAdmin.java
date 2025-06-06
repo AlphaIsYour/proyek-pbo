@@ -12,7 +12,6 @@ import model.UserSession;
 
 /**
  *
- * @author Asus
  */
 public class LoginAdmin extends javax.swing.JFrame {
 
@@ -265,10 +264,11 @@ public class LoginAdmin extends javax.swing.JFrame {
                 int adminId = rs.getInt("id_admin");
                 String nama = rs.getString("nama");
                 
-                // Store admin info for later use
-                UserSession.getInstance().setUserId(adminId);
-                UserSession.getInstance().setUsername(username);
-                UserSession.getInstance().setNama(nama);
+                // Store admin info in UserSession
+                UserSession session = UserSession.getInstance();
+                session.setUserId(adminId);
+                session.setUsername(username);
+                session.setNama(nama);
                 
                 // Close login window
                 dispose();
