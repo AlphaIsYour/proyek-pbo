@@ -3,7 +3,7 @@ package model;
 import java.sql.*;
 
 public class Database {
-    private static final String DB_URL = "jdbc:mysql://localhost:3307/cookingpapa?characterEncoding=UTF-8";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/cookingpapa?characterEncoding=UTF-8";
     private static final String USER = "root";
     private static final String PASS = "";
 
