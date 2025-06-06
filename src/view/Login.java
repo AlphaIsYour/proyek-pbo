@@ -8,6 +8,7 @@ import java.awt.*;
 import java.sql.*;
 import javax.swing.*;
 import model.Database;
+import model.UserSession;
 
 /**
  *
@@ -41,6 +42,7 @@ public class Login extends javax.swing.JFrame {
         BLogin = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         TPassword = new javax.swing.JPasswordField();
+        jPanel2 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -118,17 +120,32 @@ public class Login extends javax.swing.JFrame {
                 .addContainerGap(210, Short.MAX_VALUE))
         );
 
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 530, Short.MAX_VALUE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 430, Short.MAX_VALUE)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 732, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -210,51 +227,61 @@ public class Login extends javax.swing.JFrame {
         });
         
         // Add action listener to login button
-        BLogin.addActionListener(evt -> {
+        BLogin.addActionListener(e -> {
             String username = TUsername.getText();
-            String password = new String(((JPasswordField)TPassword).getPassword());
+            String password = new String(TPassword.getPassword());
             
             if (username.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(this, 
-                    "Username dan Password tidak boleh kosong!", 
-                    "Peringatan", 
-                    JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                    "Username dan password harus diisi",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
-            try (Connection conn = Database.koneksiDatabase();
-                 PreparedStatement pstmt = conn.prepareStatement(
-                     "SELECT * FROM user WHERE username = ? AND password = ?")) {
+            try {
+                Database db = new Database();
+                Connection conn = db.getConnection();
                 
-                pstmt.setString(1, username);
-                pstmt.setString(2, password);
+                String query = "SELECT * FROM user WHERE username = ? AND password = ?";
+                PreparedStatement stmt = conn.prepareStatement(query);
+                stmt.setString(1, username);
+                stmt.setString(2, password);
                 
-                ResultSet rs = pstmt.executeQuery();
+                ResultSet rs = stmt.executeQuery();
                 
                 if (rs.next()) {
-                    // Login successful
-                    JOptionPane.showMessageDialog(this, 
-                        "Login berhasil!", 
-                        "Sukses", 
-                        JOptionPane.INFORMATION_MESSAGE);
+                    int userId = rs.getInt("id_user");
+                    String nama = rs.getString("nama");
                     
-                    // Open dashboard and close login window
-                    dashboardUser dash = new dashboardUser();
-                    dash.setVisible(true);
-                    this.dispose();
+                    // Store user info for later use
+                    UserSession.getInstance().setUserId(userId);
+                    UserSession.getInstance().setUsername(username);
+                    UserSession.getInstance().setNama(nama);
+                    
+                    // Close login window
+                    dispose();
+                    
+                    // Open dashboard
+                    dashboardUser dashboard = new dashboardUser();
+                    dashboard.setCurrentUserId(userId); // Set user ID for comments
+                    dashboard.setVisible(true);
                 } else {
-                    // Login failed
-                    JOptionPane.showMessageDialog(this, 
-                        "Username atau Password salah!", 
-                        "Error", 
+                    JOptionPane.showMessageDialog(this,
+                        "Username atau password salah",
+                        "Login Gagal",
                         JOptionPane.ERROR_MESSAGE);
-                    TPassword.setText(""); // Clear password field
                 }
                 
+                rs.close();
+                stmt.close();
+                db.closeConnection();
+                
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, 
-                    "Error: " + ex.getMessage(), 
-                    "Database Error", 
+                System.err.println("Error during login: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this,
+                    "Terjadi kesalahan saat login",
+                    "Error",
                     JOptionPane.ERROR_MESSAGE);
             }
         });
@@ -300,5 +327,6 @@ public class Login extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     // End of variables declaration//GEN-END:variables
 }
