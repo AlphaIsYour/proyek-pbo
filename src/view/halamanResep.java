@@ -97,23 +97,51 @@ public class halamanResep extends javax.swing.JFrame {
                 super.paintComponent(g);
                 if (resep.getFoto() != null && !resep.getFoto().isEmpty()) {
                     try {
-                        File imageFile = new File(resep.getFoto());
+                        String imagePath = resep.getFoto();
+                        // If the path doesn't start with src/images, prepend it
+                        if (!imagePath.startsWith("src/images/")) {
+                            imagePath = "src/images/" + imagePath;
+                        }
+                        File imageFile = new File(imagePath);
                         if (imageFile.exists()) {
                             Image img = ImageIO.read(imageFile);
-                            // Scale image to fit panel width while maintaining aspect ratio
+                            // Calculate dimensions to maintain aspect ratio
                             double ratio = (double) img.getWidth(this) / img.getHeight(this);
                             int newWidth = 500; // Fixed width
                             int newHeight = (int) (newWidth / ratio);
-                            g.drawImage(img, 20, 0, newWidth, newHeight, this);
+                            
+                            // Center the image horizontally
+                            int x = (getWidth() - newWidth) / 2;
+                            
+                            // Draw image with high quality
+                            Graphics2D g2d = (Graphics2D) g;
+                            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            
+                            g2d.drawImage(img, x, 0, newWidth, newHeight, this);
                             return;
                         }
                     } catch (Exception e) {
-                        System.err.println("Error loading image: " + e.getMessage());
+                        System.err.println("Error loading image for " + resep.getJudul() + ": " + e.getMessage());
                     }
                 }
                 // Default background if no image
-                g.setColor(Color.LIGHT_GRAY);
-                g.fillRect(20, 0, 500, 300);
+                g.setColor(new Color(200, 200, 200));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Draw a placeholder icon
+                g.setColor(new Color(150, 150, 150));
+                int iconSize = 60;
+                int x = (getWidth() - iconSize) / 2;
+                int y = (getHeight() - iconSize) / 2;
+                g.fillRect(x, y, iconSize, iconSize);
+                g.setColor(new Color(200, 200, 200));
+                g.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                String noImageText = "No Image Available";
+                FontMetrics fm = g.getFontMetrics();
+                int textWidth = fm.stringWidth(noImageText);
+                g.drawString(noImageText, (getWidth() - textWidth) / 2, y + iconSize + 25);
             }
             
             @Override
@@ -232,11 +260,6 @@ public class halamanResep extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -253,13 +276,12 @@ public class halamanResep extends javax.swing.JFrame {
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(halamanResep.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new halamanResep().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            // We can't create halamanResep without a Resep object
+            // This is just a sample main method that won't be used
+            System.out.println("halamanResep needs a Resep object to be instantiated");
         });
     }
 

@@ -232,19 +232,57 @@ public class dashboardUser extends javax.swing.JFrame {
                 super.paintComponent(g);
                 if (resep.getFoto() != null && !resep.getFoto().isEmpty()) {
                     try {
-                        File imageFile = new File(resep.getFoto());
+                        String imagePath = resep.getFoto();
+                        // If the path doesn't start with src/images, prepend it
+                        if (!imagePath.startsWith("src/images/")) {
+                            imagePath = "src/images/" + imagePath;
+                        }
+                        File imageFile = new File(imagePath);
                         if (imageFile.exists()) {
                             Image img = ImageIO.read(imageFile);
-                            g.drawImage(img, 0, 0, getWidth(), getHeight(), this);
+                            // Calculate dimensions to maintain aspect ratio
+                            double aspectRatio = (double) img.getWidth(this) / img.getHeight(this);
+                            int targetWidth = getWidth();
+                            int targetHeight = getHeight();
+                            
+                            // Calculate dimensions to fit while maintaining aspect ratio
+                            if (targetWidth / aspectRatio <= targetHeight) {
+                                // Width is the limiting factor
+                                targetHeight = (int) (targetWidth / aspectRatio);
+                            } else {
+                                // Height is the limiting factor
+                                targetWidth = (int) (targetHeight * aspectRatio);
+                            }
+                            
+                            // Center the image
+                            int x = (getWidth() - targetWidth) / 2;
+                            int y = (getHeight() - targetHeight) / 2;
+                            
+                            // Draw image with high quality
+                            Graphics2D g2d = (Graphics2D) g;
+                            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            
+                            g2d.drawImage(img, x, y, targetWidth, targetHeight, this);
                             return;
                         }
                     } catch (Exception e) {
-                        System.out.println("Error loading image: " + e.getMessage());
+                        System.err.println("Error loading image for " + resep.getJudul() + ": " + e.getMessage());
                     }
                 }
                 // Default background if no image
-                g.setColor(Color.LIGHT_GRAY);
+                g.setColor(new Color(200, 200, 200));
                 g.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Draw a placeholder icon
+                g.setColor(new Color(150, 150, 150));
+                int iconSize = 40;
+                int x = (getWidth() - iconSize) / 2;
+                int y = (getHeight() - iconSize) / 2;
+                g.fillRect(x, y, iconSize, iconSize);
+                g.setColor(new Color(200, 200, 200));
+                g.drawString("No Image", x - 10, y + iconSize + 20);
             }
         };
         imagePanel.setBackground(Color.LIGHT_GRAY);
