@@ -105,6 +105,81 @@ public class dashboardUser extends javax.swing.JFrame {
                 System.err.println("Error closing resources: " + e.getMessage());
             }
         }
+        
+        // Reset page to 1 and update display
+        currentPage = 1;
+        updateCardDisplay();
+        setupPagination();
+    }
+
+    private void searchResep(String searchText, String selectedKategori) {
+        resepList.clear();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = db.getConnection();
+            StringBuilder queryBuilder = new StringBuilder();
+            queryBuilder.append("SELECT r.*, k.nama_kategori FROM resep r ")
+                       .append("LEFT JOIN kategori k ON r.id_kategori = k.id_kategori ")
+                       .append("WHERE 1=1 ");
+            
+            List<Object> params = new ArrayList<>();
+            
+            // Add search condition if search text is provided
+            if (searchText != null && !searchText.trim().isEmpty()) {
+                queryBuilder.append("AND (LOWER(r.judul) LIKE LOWER(?) OR LOWER(r.bahan) LIKE LOWER(?)) ");
+                params.add("%" + searchText.trim() + "%");
+                params.add("%" + searchText.trim() + "%");
+            }
+            
+            // Add kategori condition if selected and not "Semua"
+            if (selectedKategori != null && !selectedKategori.equals("Semua")) {
+                queryBuilder.append("AND k.nama_kategori = ? ");
+                params.add(selectedKategori);
+            }
+            
+            stmt = conn.prepareStatement(queryBuilder.toString());
+            
+            // Set parameters
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            
+            rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Resep resep = new Resep(
+                    rs.getInt("id_resep"),
+                    rs.getInt("id_kategori"),
+                    rs.getString("judul"),
+                    rs.getString("bahan"),
+                    rs.getString("alat"),
+                    rs.getString("langkah"),
+                    rs.getString("foto")
+                );
+                resep.setNama_kategori(rs.getString("nama_kategori"));
+                resepList.add(resep);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error searching recipes: " + e.getMessage(), 
+                "Database Error", 
+                JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing resources: " + e.getMessage());
+            }
+        }
+        
+        // Reset page to 1 and update display
+        currentPage = 1;
+        updateCardDisplay();
+        setupPagination();
     }
 
     private void customizeComponents() {
@@ -170,39 +245,38 @@ public class dashboardUser extends javax.swing.JFrame {
         
         // Setup pagination
         setupPagination();
+
+        // Add action listener to search button
+        searchButton.addActionListener(e -> {
+            String searchText = searchField.getText();
+            String selectedKategori = (String) kategoriCombo.getSelectedItem();
+            searchResep(searchText, selectedKategori);
+        });
+
+        // Optional: Add action listener to search field for "Enter" key
+        searchField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    searchButton.doClick();
+                }
+            }
+        });
     }
     
     private void loadKategoriToCombo() {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        
-        try {
-            conn = db.getConnection();
-            String query = "SELECT nama_kategori FROM kategori";
-            stmt = conn.prepareStatement(query);
-            rs = stmt.executeQuery();
+        try (Connection conn = db.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT nama_kategori FROM kategori ORDER BY nama_kategori")) {
             
-            DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-            model.addElement("Semua");
+            // Add "Semua" as first item
+            kategoriCombo.addItem("Semua");
             
             while (rs.next()) {
-                model.addElement(rs.getString("nama_kategori"));
+                kategoriCombo.addItem(rs.getString("nama_kategori"));
             }
-            
-            kategoriCombo.setModel(model);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, 
-                "Error loading categories: " + e.getMessage(),
-                "Database Error",
-                JOptionPane.ERROR_MESSAGE);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-            } catch (SQLException e) {
-                System.err.println("Error closing resources: " + e.getMessage());
-            }
+            System.err.println("Error loading categories: " + e.getMessage());
         }
     }
     
